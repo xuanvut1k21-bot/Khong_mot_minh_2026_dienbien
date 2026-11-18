@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
 
   const fail = () => {
     const response = NextResponse.redirect(new URL("/admin?login=failed", config.appOrigin), 303);
-    response.cookies.delete(oidcStateCookieName());
+    response.cookies.set(oidcStateCookieName(), "", {
+      maxAge: 0, httpOnly: true, secure: cookieSecurity(), sameSite: "lax", path: "/api/v1/admin/auth"
+    });
     response.headers.set("Cache-Control", "no-store");
     return response;
   };
