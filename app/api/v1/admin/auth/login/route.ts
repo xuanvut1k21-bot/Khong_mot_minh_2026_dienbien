@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
   catch {
     return new Response("Đăng nhập quản trị chưa được cấu hình.", { status: 503 });
   }
+  if (!process.env.DATABASE_URL) {
+    return new Response("AUTH_DATABASE_NOT_CONFIGURED", { status: 503 });
+  }
   if (request.nextUrl.origin !== config.appOrigin) {
     return new Response("INVALID_ORIGIN", { status: 400 });
   }
