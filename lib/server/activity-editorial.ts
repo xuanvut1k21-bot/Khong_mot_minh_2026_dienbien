@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { PoolClient } from "pg";
 import { z } from "zod";
 import {
-  adminSessionCookieName, readAdminSession, type AdminIdentity
+  adminSessionCookieName, readAdminSession, authConfigured, type AdminIdentity
 } from "@/lib/server/admin-security";
 
 // All editorial writes require same-origin browser requests and a configured HTTPS site.
@@ -20,6 +20,7 @@ export function validateAdminWriteOrigin(request: NextRequest): boolean {
 }
 
 export async function authenticateAdmin(request: NextRequest): Promise<AdminIdentity | null> {
+  if (!authConfigured()) return null;
   return readAdminSession(request.cookies.get(adminSessionCookieName())?.value);
 }
 

@@ -1,4 +1,4 @@
-import { currentAdminSession } from "@/lib/server/admin-security";
+import { currentAdminSession, authConfigured } from "@/lib/server/admin-security";
 import { getDatabasePool } from "@/lib/server/db";
 import ActivityManager from "@/components/admin/ActivityManager";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import Link from "next/link";
 export const dynamic="force-dynamic";
 
 export default async function AdminActivitiesPage() {
-  const actor=await currentAdminSession();
+  const actor=authConfigured() ? await currentAdminSession() : null;
   if (!actor) return <main className="container content-section">
     <h1>Quản lý hoạt động</h1>
     <div className="notice notice-warning">Bạn cần đăng nhập quản trị được cấp quyền.</div>
