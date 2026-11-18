@@ -55,6 +55,7 @@ export default function ActivityManager() {
   const [page,setPage]=useState(1);
   const [form,setForm]=useState<FormData>(empty);
   const [editing,setEditing]=useState<string|null>(null);
+  const [editingOrganizationName,setEditingOrganizationName]=useState("");
   const [resultId,setResultId]=useState<string|null>(null);
   const [sessions,setSessions]=useState("0");
   const [attendance,setAttendance]=useState("0");
@@ -99,11 +100,12 @@ export default function ActivityManager() {
       startsAt:localTime,location:item.location_label??""
     });
     setEditing(item.id);
+    setEditingOrganizationName(item.organization_name);
     setResultId(null);
     setError("");setMessage("");
     window.scrollTo({top:0,behavior:"smooth"});
   }
-  function resetForm() {setEditing(null);setForm(empty);}
+  function resetForm() {setEditing(null);setEditingOrganizationName("");setForm(empty);}
 
   async function submitForm(event:React.FormEvent) {
     event.preventDefault();
@@ -176,14 +178,15 @@ export default function ActivityManager() {
     {error && <div className="notice notice-warning" role="alert">{error}</div>}
     {message && <div className="notice" role="status">{message}</div>}
 
-    {units.length>0 && <form onSubmit={e=>void submitForm(e)} className="demo-panel">
+    {(units.length>0 || Boolean(editing)) && <form onSubmit={e=>void submitForm(e)} className="demo-panel">
       <h3>{editing?"Chỉnh sửa bản nháp":"Tạo hoạt động mới"}</h3>
       <label className="field">Đơn vị tổ chức
-        <select value={form.organizationId} disabled={Boolean(editing)}
-          required onChange={e=>updateForm("organizationId",e.target.value)}>
-          <option value="">Chọn đơn vị</option>
-          {units.map(u=><option key={u.id} value={u.id}>{u.public_name}</option>)}
-        </select>
+        {editing ? <span className="field-unit">{editingOrganizationName}</span> :
+          <select value={form.organizationId}
+            required onChange={e=>updateForm("organizationId",e.target.value)}>
+            <option value="">Chọn đơn vị</option>
+            {units.map(u=><option key={u.id} value={u.id}>{u.public_name}</option>)}
+          </select>}
       </label>
       <label className="field">Tiêu đề
         <input required minLength={3} maxLength={300} value={form.title}
@@ -223,7 +226,7 @@ export default function ActivityManager() {
           onClick={resetForm}>Hủy chỉnh sửa</button>}
       </div>
     </form>}
-    {units.length===0 && <div className="notice">Chưa có đơn vị được cấp quyền nhập hoạt động, hoặc danh mục đơn vị chưa được cấu hình.</div>}
+    {units.length===0 && !editing && <div className="notice">Chưa có đơn vị được cấp quyền nhập hoạt động, hoặc danh mục đơn vị chưa được cấu hình.</div>}
 
     <h2>Danh sách hoạt động</h2>
     <label className="field">Lọc trạng thái

@@ -26,13 +26,24 @@ export async function authenticateAdmin(request: NextRequest): Promise<AdminIden
 export async function parseJsonBody<T>(
   request: NextRequest, schema: z.ZodType<T>
 ): Promise<T | null> {
+  if (request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json") return null;
   const declared = Number(request.headers.get("content-length"));
   if (Number.isFinite(declared) && declared > 16000) return null;
+  const reader = request.body?.getReader();
+  if (!reader) return null;
   try {
-    const raw = await request.text();
-    if (Buffer.byteLength(raw, "utf8") > 16000) return null;
-    return schema.parse(JSON.parse(raw));
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 16000) { await reader.cancel(); return null; }
+      chunks.push(value);
+    }
+    return schema.parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
   } catch { return null; }
+  finally { reader.releaseLock(); }
 }
 
 export async function permitted(
