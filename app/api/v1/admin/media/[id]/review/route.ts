@@ -6,6 +6,7 @@ import {
   parseJsonBody, errorResponse, EditorialError
 } from "@/lib/server/activity-editorial";
 import { mediaAudit, mediaPermission, validDriveFileUrl } from "@/lib/server/media-editorial";
+import { checkedPreviewKey } from "@/lib/server/media-content";
 
 export const runtime="nodejs";
 type Context={params:Promise<{id:string}>};
@@ -40,7 +41,8 @@ export async function POST(request:NextRequest,context:Context) {
     const found=await db.query(
       [
         "SELECT id,owner_organization_id,created_by,source_type,",
-        "public_source_url,approval_status",
+        "public_source_url,approval_status,scan_status,preview_ready,",
+        "preview_object_key,checksum_sha256,original_mime_type",
         "FROM media_assets WHERE id=$1 FOR UPDATE"
       ].join(" "),[id]
     );
@@ -63,9 +65,17 @@ export async function POST(request:NextRequest,context:Context) {
     if (input.action==="approve") {
       if (before!=="pending" || asset.created_by===actor.id)
         throw new EditorialError(409,"SEPARATION_OR_STATUS_INVALID");
-      if (asset.source_type!=="drive")
-        throw new EditorialError(409,"UPLOADS_NOT_SUPPORTED");
-      validDriveFileUrl(asset.public_source_url);
+      if (asset.source_type==="drive"){
+        validDriveFileUrl(asset.public_source_url);
+      } else if (asset.source_type==="upload"){
+        if (
+          asset.scan_status!=="clean" || asset.preview_ready!==true ||
+          !["image/jpeg","image/png","image/webp"].includes(asset.original_mime_type) ||
+          !checkedPreviewKey(id,asset.checksum_sha256,asset.preview_object_key)
+        ) throw new EditorialError(409,"IMAGE_NOT_SCANNED");
+      } else {
+        throw new EditorialError(409,"UNSUPPORTED_MEDIA_SOURCE");
+      }
       await db.query(
         [
           "UPDATE media_assets SET",
@@ -78,7 +88,7 @@ export async function POST(request:NextRequest,context:Context) {
         ]
       );
       await mediaAudit(db,actor.id,id,"approve",before,"approved",
-        "Nguồn Drive được cán bộ xác nhận thủ công: quyền sử dụng, riêng tư, an toàn nội dung");
+        "Nguồn đã được kiểm tra: quyền sử dụng, riêng tư và tính phù hợp nội dung");
     } else if (input.action==="reject") {
       if (before!=="pending" || asset.created_by===actor.id)
         throw new EditorialError(409,"SEPARATION_OR_STATUS_INVALID");
