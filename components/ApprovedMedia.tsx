@@ -11,7 +11,10 @@ export async function ApprovedMedia() {
         <span className="section-kicker">{item.category}</span>
         <h3>{item.title}</h3>
         {item.description && <p>{item.description}</p>}
-        <a href={item.url} target="_blank" rel="noopener noreferrer">Mở tài nguyên đã được duyệt ↗</a>
+        {item.url.startsWith("/api/v1/media/") && <img src={item.url} alt={item.title}
+          loading="lazy" style={{maxWidth:"100%",maxHeight:270,objectFit:"contain",borderRadius:8}}/>}
+        <p><a href={item.url} target={item.url.startsWith("https://")?"_blank":undefined}
+          rel="noopener noreferrer">Mở tài nguyên đã được duyệt ↗</a></p>
       </article>)}
     </div>;
   } catch {
