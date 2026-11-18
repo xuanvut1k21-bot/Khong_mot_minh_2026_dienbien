@@ -9,7 +9,7 @@ import { ApprovedMedia } from "@/components/ApprovedMedia";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
-  return sections.map(s=>({section:s.path.slice(1)}));
+  return sections.filter(s=>s.path!=="/admin").map(s=>({section:s.path.slice(1)}));
 }
 export async function generateMetadata({params}:{params:Promise<{section:string}>}):Promise<Metadata>{
   const {section}=await params;

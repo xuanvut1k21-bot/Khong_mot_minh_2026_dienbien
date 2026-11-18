@@ -40,3 +40,8 @@ Tuyệt đối không nhập dữ liệu học sinh hoặc hồ sơ nhạy cảm
 ## Cơ sở dữ liệu công khai
 
 Đã có API chỉ đọc cho Hoạt động và Thư viện, chưa có API quản trị ghi dữ liệu. Hướng dẫn PostgreSQL: [docs/PUBLIC_CONTENT.md](docs/PUBLIC_CONTENT.md).
+
+## Đăng nhập quản trị (đang cấu hình)
+
+Đã có mã khung OIDC + PKCE/MFA ACR và phân quyền scoped RBAC, mặc định khóa.
+Xem [docs/ADMIN_AUTH.md](docs/ADMIN_AUTH.md). Không có tài khoản/mật khẩu mẫu.
