@@ -99,14 +99,14 @@ export async function getApprovedMedia(
   { category, page = 1, limit = 12 }: { category?: MediaCategory; page?: number; limit?: number } = {}
 ): Promise<{ items: MediaPublic[]; hasMore: boolean }> {
   const sql = [
-    "SELECT id, title, description, category_code, public_source_url",
+    "SELECT m.id, m.title, m.description, m.category_code, m.public_source_url",
     "FROM media_assets m JOIN organizations mo ON mo.id=m.owner_organization_id AND mo.active=TRUE",
     "WHERE approval_status = 'approved'",
     "AND is_public = TRUE AND approved_at IS NOT NULL AND approved_at <= NOW()",
     "AND rights_checked_at IS NOT NULL AND privacy_checked_at IS NOT NULL",
     "AND safety_checked_at IS NOT NULL AND source_type = 'drive'",
     "AND ($1::text IS NULL OR category_code = $1::text)",
-    "ORDER BY approved_at DESC, id DESC LIMIT $2 OFFSET $3"
+    "ORDER BY m.approved_at DESC, m.id DESC LIMIT $2 OFFSET $3"
   ].join(" ");
   const result = await getDatabasePool().query(sql, [category ?? null, limit + 1, (page - 1) * limit]);
   const clean = result.rows.flatMap(row => {
