@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import MediaUploader from "@/components/admin/MediaUploader";
 
 type Unit={id:string;public_name:string};
 type MediaRow={
@@ -8,6 +9,7 @@ type MediaRow={
   status:"pending"|"approved"|"rejected"|"revoked";createdBySelf:boolean;
   rightsHolder:string|null;rightsBasis:string|null;rightsEvidenceRef:string|null;
   rejectionReason:string|null;canApprove:boolean;canRevoke:boolean;
+  sourceType:"drive"|"upload";scanStatus:string;previewReady:boolean;previewUrl:string|null;
 };
 const categories:Record<string,string>={
   brand:"Bộ nhận diện",infographic:"Infographic",video:"Video",
@@ -147,6 +149,11 @@ export default function MediaManager() {
       </button>
     </form>}
     {!units.length && <div className="empty-state">Chưa được cấp quyền đăng ký tư liệu cho đơn vị nào.</div>}
+    <section className="content-section"><h2>Tải ảnh vào vùng cách ly</h2>
+      <MediaUploader units={units} onUploaded={async()=>{
+        setStatus("pending");setPage(1);await load();
+      }}/>
+    </section>
     <h2>Danh sách tư liệu</h2>
     <label className="field">Lọc trạng thái
       <select value={status} onChange={e=>{setStatus(e.target.value);setPage(1);setSelected(null);}}>
@@ -161,7 +168,11 @@ export default function MediaManager() {
         <h3>{item.title}</h3>
         <p>{item.description}</p>
         <p><strong>Trạng thái:</strong> {item.status}</p>
+        {item.sourceType==="upload"&&<p><strong>Kiểm tra ảnh:</strong> {item.scanStatus}
+          {item.previewReady?" · Bản xem trước đã sẵn sàng":""}</p>}
         {item.driveUrl && <p><a href={item.driveUrl} target="_blank" rel="noopener noreferrer">Kiểm tra tệp nguồn Drive ↗</a></p>}
+        {item.previewUrl&&<p><img src={item.previewUrl} alt={item.title} loading="lazy"
+          style={{maxWidth:"100%",maxHeight:250,objectFit:"contain",borderRadius:8}}/></p>}
         {item.rejectionReason && <p><strong>Lý do từ chối:</strong> {item.rejectionReason}</p>}
         {((item.canApprove && item.status==="pending") ||
           (item.canRevoke && item.status==="approved")) &&
@@ -180,6 +191,11 @@ export default function MediaManager() {
       <h2>Kiểm duyệt: {selected.title}</h2>
       <p><strong>Đơn vị:</strong> {selected.organization}</p>
       {selected.driveUrl && <p><a href={selected.driveUrl} target="_blank" rel="noopener noreferrer">Mở tệp nguồn để kiểm tra ↗</a></p>}
+      {selected.previewUrl&&<p><img src={selected.previewUrl} alt={selected.title}
+        style={{maxWidth:"100%",maxHeight:380,objectFit:"contain"}}/></p>}
+      {selected.sourceType==="upload"&&selected.scanStatus!=="clean"&&
+        <div className="notice notice-warning">Ảnh chưa vượt qua kiểm tra tự động;
+          không thể phê duyệt công khai.</div>}
       {selected.status==="pending" && <>
         {selected.createdBySelf && <div className="notice notice-warning">
           Người nhập không được tự phê duyệt hoặc từ chối tư liệu.
@@ -202,6 +218,7 @@ export default function MediaManager() {
         <label className="field"><input type="checkbox" checked={safetyOk}
           onChange={e=>setSafetyOk(e.target.checked)}/> Đã xem và kiểm tra tính phù hợp của nội dung nguồn Drive</label>
         <button className="button button-blue" disabled={busy||selected.createdBySelf||
+          (selected.sourceType==="upload"&&(!selected.previewReady||selected.scanStatus!=="clean"))||
           !rightsOk||!privacyOk||!safetyOk||
           rightsHolder.trim().length<2||rightsBasis.trim().length<10||
           rightsEvidenceRef.trim().length<3}
