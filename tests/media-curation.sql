@@ -2,7 +2,7 @@
 BEGIN;
 DO $$
 DECLARE
-  unit_id UUID; editor_id UUID; reviewer_id UUID; activity_id UUID;
+  unit_id UUID; editor_id UUID; reviewer_id UUID; v_activity_id UUID;
   media_id UUID; link_id UUID; visible_count INTEGER;
 BEGIN
   INSERT INTO organizations(public_name) VALUES('Synthetic media test unit')
@@ -23,7 +23,7 @@ BEGIN
   INSERT INTO activities(organization_id,slug,title,category_code,created_by,publish_status,published_at)
     VALUES(unit_id,'media-synthetic-activity','Synthetic campaign activity',
       'community',editor_id,'published',NOW())
-    RETURNING id INTO activity_id;
+    RETURNING id INTO v_activity_id;
 
   INSERT INTO media_assets(title,description,category_code,source_type,
     public_source_url,owner_organization_id,created_by)
@@ -56,7 +56,7 @@ BEGIN
   END;
 
   INSERT INTO activity_assets(activity_id,media_asset_id,linked_by)
-    VALUES(activity_id,media_id,editor_id) RETURNING id INTO link_id;
+    VALUES(v_activity_id,media_id,editor_id) RETURNING id INTO link_id;
   SELECT COUNT(*) INTO visible_count FROM activity_assets
     WHERE id=link_id AND link_status='approved';
   IF visible_count<>0 THEN RAISE EXCEPTION 'Unapproved attachment visible'; END IF;
@@ -77,7 +77,7 @@ BEGIN
   JOIN activity_assets l ON l.activity_id=a.id AND l.link_status='approved'
   JOIN media_assets m ON m.id=l.media_asset_id
   JOIN organizations mo ON mo.id=m.owner_organization_id AND mo.active=TRUE
-  WHERE a.id=activity_id AND a.publish_status='published'
+  WHERE a.id=v_activity_id AND a.publish_status='published'
     AND a.published_at<=NOW()
     AND m.approval_status='approved' AND m.is_public=TRUE
     AND m.rights_checked_at IS NOT NULL
@@ -95,6 +95,6 @@ BEGIN
   INSERT INTO media_review_events(asset_id,actor_id,action,from_status,to_status,note)
     VALUES(media_id,reviewer_id,'revoke','approved','revoked','Synthetic test only');
   INSERT INTO activity_asset_events(link_id,activity_id,actor_id,action,from_status,to_status)
-    VALUES(link_id,activity_id,reviewer_id,'hide','approved','hidden');
+    VALUES(link_id,v_activity_id,reviewer_id,'hide','approved','hidden');
 END $$;
 ROLLBACK;
