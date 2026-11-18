@@ -46,6 +46,9 @@ export function getOidcConfiguration(): OidcConfiguration {
     if (!process.env[name]) throw new Error("AUTH_NOT_CONFIGURED");
   }
   const app = secureUrl(process.env.APP_BASE_URL!, true);
+  if (process.env.NODE_ENV === "production" && app.protocol !== "https:") {
+    throw new Error("ADMIN_REQUIRES_HTTPS");
+  }
   if (app.pathname !== "/" || app.search || app.hash)
     throw new Error("APP_BASE_URL_INVALID");
   const issuer = secureUrl(process.env.OIDC_ISSUER!);
