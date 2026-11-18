@@ -43,3 +43,5 @@ hoặc hồ sơ nhạy cảm trong môi trường thử nghiệm.
 
 Migration: chạy 001, 002, 003, 004 theo thứ tự.
 Không ghép trực tiếp các đoạn SQL 005-011 đã từng soạn trong hội thoại.
+
+Các URL Drive dạng `/view/` và `/view` được chuẩn hóa về cùng một URL. Database có ràng buộc không đăng ký lại chính liên kết nguồn đang tồn tại, kể cả sau khi thu hồi; việc khôi phục cần quy trình riêng.

@@ -41,7 +41,7 @@ export async function GET(request:NextRequest,context:Context) {
   const db=await getDatabasePool().connect();
   try {
     const activity=await db.query(
-      "SELECT id,organization_id FROM activities WHERE id=$1",[id]
+      "SELECT id,organization_id,created_by FROM activities WHERE id=$1",[id]
     );
     if (!activity.rowCount) return NextResponse.json({error:"NOT_FOUND"},{status:404});
     if (!await permitted(db,actor.id,"view",activity.rows[0].organization_id,id))
@@ -62,7 +62,7 @@ export async function GET(request:NextRequest,context:Context) {
         id:row.id,mediaId:row.media_asset_id,title:row.title,category:row.category_code,
         status:row.link_status,mediaStatus:row.approval_status,
         driveUrl:safeOfficialDriveUrl(row.drive_url),
-        canApprove:canApprove && row.linked_by!==actor.id
+        canApprove:canApprove && row.linked_by!==actor.id && activity.rows[0].created_by!==actor.id
       }))
     },{headers:{"Cache-Control":"no-store"}});
   } catch(error) {return errorResponse(error);}

@@ -20,6 +20,10 @@ ALTER TABLE media_assets ADD CONSTRAINT media_approved_separation
       AND NULLIF(TRIM(rights_evidence_ref),'') IS NOT NULL
     )
   );
+-- Prevent re-registering the same external file to bypass a revoked listing.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_media_drive_file_url
+  ON media_assets(public_source_url)
+  WHERE source_type='drive' AND public_source_url IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_media_owner_status
   ON media_assets(owner_organization_id, approval_status, created_at DESC);
 

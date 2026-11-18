@@ -42,6 +42,7 @@ export function safeOfficialDriveUrl(value: string | null): string | null {
       url.username || url.password || url.port || url.search || url.hash ||
       !/^\/file\/d\/[A-Za-z0-9_-]{15,128}\/view\/?$/.test(url.pathname)
     ) return null;
+    url.pathname = url.pathname.replace(/\/$/, "");
     return url.toString();
   } catch { return null; }
 }
