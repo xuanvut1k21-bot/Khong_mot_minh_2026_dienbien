@@ -16,6 +16,7 @@ export type ActivityPublic = {
   location: string | null;
   publishedAt: string;
   verifiedResult: { sessionsCount: number; attendanceCount: number; summary: string } | null;
+  firstMediaUrl: string | null;
 };
 
 export type MediaPublic = {
@@ -41,6 +42,7 @@ export function safeOfficialDriveUrl(value: string | null): string | null {
       url.username || url.password || url.port || url.search || url.hash ||
       !/^\/file\/d\/[A-Za-z0-9_-]{15,128}\/view\/?$/.test(url.pathname)
     ) return null;
+    url.pathname = url.pathname.replace(/\/$/, "");
     return url.toString();
   } catch { return null; }
 }
@@ -51,11 +53,21 @@ export async function getPublishedActivities(
   const sql = [
     "SELECT a.id, a.slug, a.title, a.summary, a.category_code,",
     "o.public_name, a.starts_at, a.location_label, a.published_at,",
-    "r.sessions_count, r.attendance_count, r.summary AS result_summary",
+    "r.sessions_count, r.attendance_count, r.summary AS result_summary,",
+    "ml.public_source_url AS first_media_url",
     "FROM activities a",
     "JOIN organizations o ON o.id = a.organization_id",
     "LEFT JOIN activity_results r ON r.activity_id = a.id",
     "AND r.result_status = 'verified' AND r.verified_at IS NOT NULL AND r.verified_at <= NOW() AND a.event_status='completed'",
+    "LEFT JOIN LATERAL (SELECT m.public_source_url",
+    "FROM activity_assets l JOIN media_assets m ON m.id=l.media_asset_id",
+    "JOIN organizations mo ON mo.id=m.owner_organization_id AND mo.active=TRUE",
+    "WHERE l.activity_id=a.id AND l.link_status='approved'",
+    "AND m.source_type='drive' AND m.approval_status='approved' AND m.is_public=TRUE",
+    "AND m.approved_at IS NOT NULL AND m.approved_at<=NOW()",
+    "AND m.rights_checked_at IS NOT NULL AND m.privacy_checked_at IS NOT NULL",
+    "AND m.safety_checked_at IS NOT NULL",
+    "ORDER BY l.reviewed_at DESC LIMIT 1) ml ON TRUE",
     "WHERE o.active = TRUE AND a.publish_status = 'published'",
     "AND a.published_at IS NOT NULL AND a.published_at <= NOW()",
     "AND ($1::text IS NULL OR a.category_code = $1::text)",
@@ -74,6 +86,7 @@ export async function getPublishedActivities(
       startsAt: iso(row.starts_at),
       location: row.location_label,
       publishedAt: iso(row.published_at)!,
+      firstMediaUrl: safeOfficialDriveUrl(row.first_media_url),
       verifiedResult: row.sessions_count === null ? null : {
         sessionsCount: row.sessions_count,
         attendanceCount: row.attendance_count,
@@ -87,13 +100,14 @@ export async function getApprovedMedia(
   { category, page = 1, limit = 12 }: { category?: MediaCategory; page?: number; limit?: number } = {}
 ): Promise<{ items: MediaPublic[]; hasMore: boolean }> {
   const sql = [
-    "SELECT id, title, description, category_code, public_source_url",
-    "FROM media_assets WHERE approval_status = 'approved'",
+    "SELECT m.id, m.title, m.description, m.category_code, m.public_source_url",
+    "FROM media_assets m JOIN organizations mo ON mo.id=m.owner_organization_id AND mo.active=TRUE",
+    "WHERE approval_status = 'approved'",
     "AND is_public = TRUE AND approved_at IS NOT NULL AND approved_at <= NOW()",
     "AND rights_checked_at IS NOT NULL AND privacy_checked_at IS NOT NULL",
     "AND safety_checked_at IS NOT NULL AND source_type = 'drive'",
     "AND ($1::text IS NULL OR category_code = $1::text)",
-    "ORDER BY approved_at DESC, id DESC LIMIT $2 OFFSET $3"
+    "ORDER BY m.approved_at DESC, m.id DESC LIMIT $2 OFFSET $3"
   ].join(" ");
   const result = await getDatabasePool().query(sql, [category ?? null, limit + 1, (page - 1) * limit]);
   const clean = result.rows.flatMap(row => {
