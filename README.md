@@ -152,3 +152,11 @@ required reviewers, cấm tự phê duyệt, main protected và có review/CI
 bắt buộc; dùng GitHub CLI >=2.97.0 (vá CVE-2026-64655).
 Cần cấp STAGING_GOVERNANCE_AUDIT_TOKEN (chỉ Administration:read).
 Thiếu bất kỳ điều kiện nào sẽ chặn phát hành. Chưa có image ký thật.
+
+## Kiểm toán chuỗi PR trước khi merge
+
+Có báo cáo `docs/PR_CHAIN_AUDIT_2026-11-19.md` và công cụ chỉ đọc
+`scripts/audit-pr-chain.mjs`. Tính đến 19/11/2026, PR #1–#19 đều
+Draft/chưa được review; CI của từng head thành công và cây commit
+liên tục, nhưng main chưa bật branch protection. **NO-GO**.
+Workflow `pr-chain-audit.yml` chỉ chạy thủ công, không merge hoặc deploy.
