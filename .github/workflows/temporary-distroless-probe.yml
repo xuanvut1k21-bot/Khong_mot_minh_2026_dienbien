@@ -1,0 +1,30 @@
+name: Temporary distroless runtime feasibility probe
+on:
+  push:
+    branches: [feat/container-image-supply-chain-scan]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check distroless Node 22 Debian 13 manifest
+        run: |
+          set -euo pipefail
+          ref="gcr.io/distroless/nodejs22-debian13:nonroot"
+          digest="$(docker buildx imagetools inspect "$ref" | awk '/^Digest:/ {print $2; exit}')"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          echo "DISTROLESS_NODE22_DIGEST=$digest"
+      - name: Scan minimal distroless runtime OS CVEs
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: gcr.io/distroless/nodejs22-debian13:nonroot
+          scan-type: image
+          scanners: vuln
+          vuln-type: os
+          severity: HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "1"
+          format: table
+          cache: "false"
