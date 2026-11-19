@@ -66,9 +66,11 @@ async function signedSurvey(
 }
 async function getCookie(response:Response):Promise<string>{
   const cookie=response.headers.get("set-cookie");
-  assert.ok(cookie?.includes("HttpOnly"),"Training cookie must be HttpOnly");
-  assert.ok(cookie.includes("SameSite=Lax"),"Training cookie must be SameSite=Lax");
-  assert.ok(!cookie.includes("Secure"),"Local CI must use an insecure dev-only cookie");
+  if(!cookie)throw new Error("Missing registration session cookie");
+  assert.match(cookie,/httponly/i,"Training cookie must be HttpOnly");
+  assert.match(cookie,/samesite=lax/i,"Training cookie must be SameSite=Lax");
+  assert.ok(!/;\s*secure\b/i.test(cookie),
+    "Local CI must use a development-only non-Secure cookie");
   return cookie.split(";")[0];
 }
 async function startServer(){
