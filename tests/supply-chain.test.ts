@@ -26,7 +26,11 @@ test("GitHub workflow actions use complete reviewed 40-character commit SHA",()=
  for(const [path,workflow] of [["ci",ci],["staging",staging],["attestationGate",attestationGate]] as const){
    const used=[...workflow.matchAll(/uses:\s*([^\s#]+)\s*(?:#.*)?$/gm)]
      .map(match=>match[1]);
-   assert.ok(used.length>=2,path+" missing expected actions");
+   const minimum=path==="attestationGate"?1:2;
+   assert.ok(used.length>=minimum,path+" missing expected actions");
+   if(path==="attestationGate")
+     assert.ok(used.some(action=>action.startsWith("actions/checkout@")),
+       "Release gate must use SHA-pinned checkout");
    for(const action of used){
      const parts=action.split("@");
      assert.equal(parts.length,2,path+" invalid action reference");
