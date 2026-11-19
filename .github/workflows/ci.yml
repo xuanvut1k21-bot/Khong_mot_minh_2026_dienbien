@@ -30,10 +30,10 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - run: npm install --no-audit --no-fund
-      - name: Bootstrap dependency lockfile for audited commit
-        run: |
-          node -e "const fs=require('fs');const b=fs.readFileSync('package-lock.json').toString('base64');console.log('LOCK_RAW_BEGIN');for(let i=0;i<b.length;i+=500) console.log('LOCK_RAW_CHUNK:'+b.slice(i,i+500));console.log('LOCK_RAW_END')"
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Audit production dependency advisories
+        run: npm audit --omit=dev --audit-level=high --no-fund
       - run: npm run typecheck
       - run: npm run training:unit
       - run: npm run staging:test

@@ -115,3 +115,11 @@ bind cổng về 127.0.0.1:3000, khóa các chức năng nhạy cảm và dùng
 giới hạn tài nguyên. Chỉ chạy sau khi đã có HTTPS proxy và PostgreSQL
 staging riêng. CI tự build, chạy thử và xóa container thử;
 không đẩy lên registry hay đưa lên máy chủ. Xem tài liệu staging.
+
+## Khóa phiên bản thư viện và kiểm tra bảo mật
+Có `package-lock.json` tạo bằng CI và xác minh trùng `package.json`.
+GitHub Actions và Docker đều sử dụng `npm ci` để cài theo lockfile;
+CI chạy `npm audit --omit=dev --audit-level=high` và sẽ báo lỗi nếu
+phát hiện cảnh báo mức cao/nghiêm trọng của dependency production.
+Dependabot được cấu hình tạo PR cập nhật, không tự merge.
+Chi tiết xem `docs/DEPENDENCY_SECURITY.md`.
