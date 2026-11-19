@@ -29,9 +29,14 @@ async function main(){
   const pulls=completeList("pulls?state=all").sort((a,b)=>a.number-b.number);
   if(!pulls.length)throw new Error("EMPTY_PR_STACK");
   const branch=get("branches/main");
-  // The full branch protection endpoint is intentionally mandatory. A public
-  // 'protected:true' flag alone does not establish review/CI/admin controls.
-  const protection=get("branches/main/protection");
+  // Read active repository ruleset details: classic branch protection can be absent
+  // even while a ruleset successfully protects main.
+  const listed=get("rulesets");
+  if(!Array.isArray(listed))throw new Error("RULESET_LIST_UNAVAILABLE");
+  const matching=listed.filter(r=>r.name==="Protect main"&&r.enforcement==="active"&&
+    r.target==="branch"&&r.source_type==="Repository");
+  if(matching.length!==1)throw new Error("ACTIVE_MAIN_RULESET_NOT_UNIQUE");
+  const mainRuleset=get("rulesets/"+matching[0].id);
   const comparisons={},reviewsByPr={},checksByPr={},runsByPr={};
   for(const p of pulls){
     if(p.state==="closed"&&p.merged_at)continue;
@@ -49,7 +54,7 @@ async function main(){
       throw new Error("WORKFLOW_RUN_PAGINATION_UNVERIFIED");
     runsByPr[p.number]=runs.workflow_runs;
   }
-  const report=auditStack({pulls,main:branch,protection,comparisons,reviewsByPr,checksByPr,runsByPr});
+  const report=auditStack({pulls,main:branch,mainRuleset,comparisons,reviewsByPr,checksByPr,runsByPr});
   report.generatedAt=new Date().toISOString();
   mkdirSync("artifacts",{recursive:true});
   writeFileSync("artifacts/pr-chain-audit.json",JSON.stringify(report,null,2)+"\n",{mode:0o600});
