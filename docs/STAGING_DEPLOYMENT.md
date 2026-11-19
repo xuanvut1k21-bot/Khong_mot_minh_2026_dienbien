@@ -125,9 +125,10 @@ và training.registrationOpen=false. Không chạy docker push,
 không đăng ký domain hoặc khởi chạy dịch vụ thực.
 
 ### Giới hạn chất lượng image
-Repository hiện chưa có package-lock.json được quản lý phiên bản;
-Dockerfile dùng npm install tương tự CI hiện hành, do đó các bản build
-chưa hoàn toàn lặp lại được. Phải tạo, kiểm duyệt và commit lockfile,
-quét lỗ hổng dependency, xác thực nguồn base image rồi mới coi là
-pipeline build phục vụ production. Không coi smoke test là kiểm toán
-container, WAF, MFA hoặc chứng minh tuân thủ dữ liệu.
+Repository đã có package-lock.json được quản lý phiên bản, CI và Docker
+dùng npm ci để khóa phụ thuộc ở thời điểm build. GitHub Actions chạy
+npm audit cho dependency production ở mức cảnh báo cao trở lên. Tuy vậy,
+base image node:22-bookworm-slim vẫn là tag có thể di chuyển, chưa khóa
+theo digest; GitHub Actions cũng cần pin commit SHA sau khi kiểm tra.
+Audit npm không kiểm tra toàn bộ CVE của hệ điều hành trong container,
+không thay thế quét image, kiểm toán WAF, MFA hoặc dữ liệu cá nhân.

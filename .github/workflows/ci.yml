@@ -30,8 +30,12 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Audit production dependency advisories
+        run: npm audit --omit=dev --audit-level=high --no-fund
       - run: npm run typecheck
+      - run: npm run media:compat
       - run: npm run training:unit
       - run: npm run staging:test
       - run: npm run build
