@@ -37,6 +37,7 @@ export default async function AdminPage() {
           <ul>{grants.map((g,i)=><li key={i}>{g.role_code} · {g.scope_type}</li>)}</ul>}
         <p><a className="button button-blue" href="/admin/activities">Quản lý hoạt động hưởng ứng →</a></p>
         <p><a className="button button-outline" href="/admin/media">Kiểm duyệt Thư viện truyền thông →</a></p>
+        <p><a className="button button-outline" href="/admin/training">Biên soạn và thẩm định Đào tạo →</a></p>
         <div className="notice">
           Hoạt động hưởng ứng có giao diện nhập và duyệt theo quyền được cấp.
           Thư viện truyền thông đã có phần quản trị nguồn Drive có kiểm duyệt. Các chức năng còn lại chưa được kích hoạt.

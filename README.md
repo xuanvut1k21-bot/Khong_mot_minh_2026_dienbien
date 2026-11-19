@@ -70,3 +70,10 @@ xác nhận hai khảo sát bằng webhook có chữ ký và bài thi 20 câu/15
 từ đúng 90 câu đã duyệt, chấm điểm tại máy chủ, đạt từ 16 câu.
 Không có học liệu, câu hỏi hoặc người học giả trong production.
 Xem [docs/TRAINING_FOUNDATION.md](docs/TRAINING_FOUNDATION.md).
+
+## Biên soạn và duyệt nội dung Đào tạo
+Giao diện nội bộ tại `/admin/training`. Có hai vai trò phân quyền toàn chương
+trình `training_editor` và `training_approver`, không mặc định cấp cho admin kỹ thuật.
+Nhập 9 học liệu và ngân hàng câu hỏi, gửi duyệt độc lập và lưu nhật ký.
+Không nhập sẵn dữ liệu thật hoặc câu hỏi giả. Xem
+[docs/TRAINING_EDITORIAL.md](docs/TRAINING_EDITORIAL.md).
