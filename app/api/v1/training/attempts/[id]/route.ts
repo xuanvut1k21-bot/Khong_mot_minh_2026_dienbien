@@ -7,6 +7,7 @@ import {
   TRAINING_SUCCESS_MESSAGE
 } from "@/lib/server/training-security";
 import { gradeExam } from "@/lib/training-exam";
+import { consumeLearnerBudget,trainingTooManyRequests } from "@/lib/server/training-budgets";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -73,7 +74,13 @@ export async function POST(request:NextRequest,ctx:Context){
     return NextResponse.json({error:"INVALID_ID"},{status:400});
   const body=await parseJsonBody(request,schema);
   if(!body)return NextResponse.json({error:"INVALID_INPUT"},{status:400});
-
+  try{
+    if(!await consumeLearnerBudget(learner.id,"exam_submit"))
+      return trainingTooManyRequests(60);
+  }catch{
+    return NextResponse.json({error:"EXAM_UNAVAILABLE"},{status:503,
+      headers:{"Cache-Control":"no-store"}});
+  }
   const db=await getDatabasePool().connect();
   try{
     await db.query("BEGIN");

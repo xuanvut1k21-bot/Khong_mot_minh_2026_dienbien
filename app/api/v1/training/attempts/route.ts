@@ -4,6 +4,7 @@ import {
   getTrainingLearner,trainingExamEnabled,trainingOriginValid
 } from "@/lib/server/training-security";
 import {APPROVED_BANK_SIZE,EXAM_QUESTION_COUNT} from "@/lib/training-exam";
+import { consumeLearnerBudget,trainingTooManyRequests } from "@/lib/server/training-budgets";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -27,6 +28,13 @@ export async function POST(request:NextRequest){
     return NextResponse.json({error:"INVALID_ORIGIN"},{status:403});
   const learner=await getTrainingLearner(request);
   if(!learner)return NextResponse.json({error:"UNAUTHORIZED"},{status:401});
+  try{
+    if(!await consumeLearnerBudget(learner.id,"exam_start"))
+      return trainingTooManyRequests(60);
+  }catch{
+    return NextResponse.json({error:"EXAM_UNAVAILABLE"},{status:503,
+      headers:{"Cache-Control":"no-store"}});
+  }
   const db=await getDatabasePool().connect();
   try{
     await db.query("BEGIN");

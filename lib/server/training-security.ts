@@ -6,9 +6,12 @@ export const TRAINING_SESSION_SECONDS=30*24*60*60;
 export const TRAINING_SUCCESS_MESSAGE=
   "Congratulations! Chúc mừng bạn đã hoàn thành chương trình đào tạo giảng viên Không Một Mình 2026";
 
-export function trainingRegistrationEnabled():boolean {
-  if(process.env.TRAINING_REGISTRATION_ENABLED!=="true" || !process.env.DATABASE_URL)
-    return false;
+export function trainingOperationalReady():boolean {
+  if(!process.env.DATABASE_URL)return false;
+  // Production requires an independently configured trusted ingress throttle.
+  // This flag certifies deployment readiness; it does not implement edge filtering.
+  if(process.env.NODE_ENV==="production" &&
+     process.env.TRAINING_EDGE_RATE_LIMIT_READY!=="true")return false;
   try{
     const site=new URL(process.env.APP_BASE_URL??"");
     const notice=new URL(process.env.TRAINING_PRIVACY_NOTICE_URL??"");
@@ -19,8 +22,13 @@ export function trainingRegistrationEnabled():boolean {
     );
   }catch{return false;}
 }
+export function trainingRegistrationEnabled():boolean {
+  return trainingOperationalReady() &&
+    process.env.TRAINING_REGISTRATION_ENABLED==="true";
+}
 export function trainingExamEnabled():boolean {
-  return trainingRegistrationEnabled() &&
+  // Existing learners can finish exams when new registrations are paused.
+  return trainingOperationalReady() &&
     process.env.TRAINING_EXAM_ENABLED==="true";
 }
 
