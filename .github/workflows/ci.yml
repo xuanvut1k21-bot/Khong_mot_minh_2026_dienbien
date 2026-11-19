@@ -26,8 +26,8 @@ jobs:
     env:
       TEST_DATABASE_URL: postgresql://test:test@localhost:5432/km_test
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: "22"
       - name: Install locked dependencies
@@ -36,6 +36,7 @@ jobs:
         run: npm audit --omit=dev --audit-level=high --no-fund
       - run: npm run typecheck
       - run: npm run media:compat
+      - run: npm run supply-chain:test
       - run: npm run training:unit
       - run: npm run staging:test
       - run: npm run build
@@ -88,6 +89,18 @@ jobs:
 
       - name: Build disposable staging image (no registry or deploy)
         run: docker build --pull --tag km2026-staging:ci .
+      - name: Scan built container operating-system CVEs (HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: km2026-staging:ci
+          scan-type: image
+          scanners: vuln
+          vuln-type: os
+          severity: HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "1"
+          format: table
+          cache: "false"
       - name: Smoke-test isolated production-mode container without secrets
         run: |
           docker run -d --rm --name km2026-ci \
