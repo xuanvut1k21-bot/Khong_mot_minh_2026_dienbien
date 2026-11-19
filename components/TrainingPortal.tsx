@@ -5,7 +5,8 @@ type Lesson={number:number;title:string|null;url:string|null;published:boolean};
 type Overview={
   lessons:Lesson[];registrationOpen:boolean;examOpen:boolean;
   privacyNoticeUrl:string|null;bankReady:boolean;
-  surveysVerified:number[];learnerReference:string|null;
+  surveysVerified:number[];registered:boolean;
+  surveyLaunchAvailable:{"1":boolean;"9":boolean};
 };
 type Question={position:number;text:string;options:string[]};
 type Paper={attemptId:string;expiresAt:string;questions:Question[]};
@@ -133,6 +134,17 @@ export function TrainingPortal(){
                 "Đã được xác nhận bởi hệ thống khảo sát":
                 "Chưa có xác nhận hoàn thành"
             }</p>}
+          {(lesson.number===1||lesson.number===9) &&
+            lesson.published && view?.surveyLaunchAvailable[String(lesson.number) as "1"|"9"] &&
+            <div>
+              <img src={"/api/v1/training/surveys/"+lesson.number+"/qr"}
+                alt={"Mã QR dẫn tới khảo sát phiên "+lesson.number}
+                width={152} height={152} loading="lazy"/>
+              <p><a href={"/dao-tao/khao-sat/"+lesson.number}>
+                Mở khảo sát phiên {lesson.number} ↗
+              </a></p>
+              <p>Quét QR không tự xác nhận hoàn thành khảo sát.</p>
+            </div>}
         </article>
       )}
     </div>
@@ -140,8 +152,10 @@ export function TrainingPortal(){
     {error&&<div className="notice notice-warning" role="alert">{error}</div>}
     {note&&<div className="notice" role="status">{note}</div>}
 
+    {view?.registered&&<p><button type="button" className="button button-outline"
+      onClick={()=>void reload()}>Kiểm tra lại xác nhận khảo sát</button></p>}
     <h2>Đăng ký tham gia</h2>
-    {view?.learnerReference?
+    {view?.registered?
       <div className="demo-panel">
         <p>Bạn đã đăng ký trên thiết bị này. Phiên đăng ký được bảo vệ bằng cookie
           HttpOnly, không hiển thị họ tên hoặc trường học trên trang công khai.</p>

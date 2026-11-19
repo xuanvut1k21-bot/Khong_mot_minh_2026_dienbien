@@ -65,8 +65,10 @@ export async function POST(request:NextRequest){
       [
         "SELECT",
         "(SELECT COUNT(*)::integer FROM training_lessons WHERE status='published') AS lessons,",
-        "(SELECT COUNT(*)::integer FROM training_verified_surveys",
-        "WHERE learner_id=$1 AND lesson_number IN (1,9)) AS surveys,",
+        "(SELECT COUNT(*)::integer FROM training_verified_surveys v",
+        "JOIN training_survey_handoffs h ON h.id=v.handoff_id",
+        "WHERE v.learner_id=$1 AND v.lesson_number IN (1,9)",
+        "AND h.consumed_at IS NOT NULL) AS surveys,",
         "(SELECT COUNT(*)::integer FROM training_questions",
         "WHERE approval_status='approved') AS questions"
       ].join(" "),[learner.id]

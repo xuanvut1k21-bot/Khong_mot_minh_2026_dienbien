@@ -54,3 +54,5 @@ jobs:
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/training-foundation.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/008_training_editorial.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/training-editorial.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/009_training_survey_handoffs.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/training-survey-handoffs.sql
