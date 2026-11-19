@@ -239,7 +239,9 @@ async function integration(){
 
   await db.query([
     "INSERT INTO training_learner_rate_limits(learner_id,action,used,window_started_at)",
-    "VALUES($1,'exam_start',12,NOW())"
+    "VALUES($1,'exam_start',12,NOW())",
+    "ON CONFLICT(learner_id,action) DO UPDATE SET",
+    "used=EXCLUDED.used,window_started_at=NOW()"
   ].join(" "),[firstLearnerId]);
   response=await post("/api/v1/training/attempts",{},firstCookie);
   expectStatus(response,429,"Exam start budget enforced");
@@ -295,7 +297,9 @@ async function integration(){
   }));
   await db.query([
     "INSERT INTO training_learner_rate_limits(learner_id,action,used,window_started_at)",
-    "VALUES($1,'exam_submit',30,NOW())"
+    "VALUES($1,'exam_submit',30,NOW())",
+    "ON CONFLICT(learner_id,action) DO UPDATE SET",
+    "used=EXCLUDED.used,window_started_at=NOW()"
   ].join(" "),[firstLearnerId]);
   response=await post("/api/v1/training/attempts/"+attemptId,{answers:first15},firstCookie);
   expectStatus(response,429,"Exam submit budget enforced");
