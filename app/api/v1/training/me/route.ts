@@ -14,13 +14,12 @@ export async function GET(request:NextRequest){
     headers:{"Cache-Control":"no-store"}
   });
   try{
-    const result=await getDatabasePool().query(
+    const result=await getDatabasePool().query([
       "SELECT v.lesson_number FROM training_verified_surveys v",
       "JOIN training_survey_handoffs h ON h.id=v.handoff_id",
       "WHERE v.learner_id=$1 AND h.consumed_at IS NOT NULL",
-      "ORDER BY v.lesson_number",
-      [learner.id]
-    );
+      "ORDER BY v.lesson_number"
+    ].join(" "),[learner.id]);
     return NextResponse.json({
       registered:true,
       verifiedSurveys:result.rows.map(x=>x.lesson_number)
