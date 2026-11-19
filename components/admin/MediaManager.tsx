@@ -43,6 +43,7 @@ export default function MediaManager() {
   const [rightsOk,setRightsOk]=useState(false);
   const [privacyOk,setPrivacyOk]=useState(false);
   const [safetyOk,setSafetyOk]=useState(false);
+  const [fullSourceReviewed,setFullSourceReviewed]=useState(false);
   const [reason,setReason]=useState("");
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState("");
@@ -92,11 +93,13 @@ export default function MediaManager() {
       const body=action==="approve"?
         {action,rightsHolder:rightsHolder.trim(),rightsBasis:rightsBasis.trim(),
           rightsEvidenceRef:rightsEvidenceRef.trim(),
-          rightsConfirmed:rightsOk,privacyConfirmed:privacyOk,safetyConfirmed:safetyOk}
+          rightsConfirmed:rightsOk,privacyConfirmed:privacyOk,safetyConfirmed:safetyOk,
+          fullSourceReviewed}
         :{action,reason:reason.trim()};
       await postJson("/api/v1/admin/media/"+selected.id+"/review",body);
       setSelected(null);setReason("");setRightsHolder("");setRightsBasis("");
       setRightsEvidenceRef("");setRightsOk(false);setPrivacyOk(false);setSafetyOk(false);
+      setFullSourceReviewed(false);
       await load();
       setNotice(action==="approve"?"Đã phê duyệt tư liệu.":action==="reject"?
         "Đã từ chối tư liệu.":"Đã thu hồi quyền hiển thị trên website.");
@@ -109,6 +112,7 @@ export default function MediaManager() {
     setRightsHolder(item.rightsHolder??"");setRightsBasis(item.rightsBasis??"");
     setRightsEvidenceRef(item.rightsEvidenceRef??"");
     setRightsOk(false);setPrivacyOk(false);setSafetyOk(false);
+    setFullSourceReviewed(false);
   }
 
   return <div className="container content-section">
@@ -223,7 +227,15 @@ export default function MediaManager() {
           onChange={e=>setPrivacyOk(e.target.checked)}/> Đã kiểm tra quyền riêng tư và dữ liệu cá nhân</label>
         <label className="field"><input type="checkbox" checked={safetyOk}
           onChange={e=>setSafetyOk(e.target.checked)}/> Đã xem và kiểm tra tính phù hợp của nội dung nguồn Drive</label>
+        {selected.sourceType==="upload" && ["pdf_cover","video_poster"].includes(selected.previewType??"") &&
+          <label className="field"><input type="checkbox" checked={fullSourceReviewed}
+            onChange={e=>setFullSourceReviewed(e.target.checked)}/>
+            Tôi đã kiểm tra toàn bộ tệp PDF/video gốc bằng môi trường an toàn riêng,
+            không chỉ xem ảnh bìa.
+          </label>}
         <button className="button button-blue" disabled={busy||selected.createdBySelf||
+          (selected.sourceType==="upload" && ["pdf_cover","video_poster"].includes(selected.previewType??"")
+           && !fullSourceReviewed)||
           (selected.sourceType==="upload"&&(!selected.previewReady||selected.scanStatus!=="clean"))||
           !rightsOk||!privacyOk||!safetyOk||
           rightsHolder.trim().length<2||rightsBasis.trim().length<10||

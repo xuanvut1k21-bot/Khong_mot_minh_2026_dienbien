@@ -18,7 +18,8 @@ const reviewSchema=z.discriminatedUnion("action",[
     rightsEvidenceRef:z.string().trim().min(3).max(500),
     rightsConfirmed:z.literal(true),
     privacyConfirmed:z.literal(true),
-    safetyConfirmed:z.literal(true)
+    safetyConfirmed:z.literal(true),
+    fullSourceReviewed:z.boolean().optional()
   }).strict(),
   z.object({action:z.literal("reject"),reason:z.string().trim().min(8).max(1000)}).strict(),
   z.object({action:z.literal("revoke"),reason:z.string().trim().min(8).max(1000)}).strict()
@@ -81,6 +82,11 @@ export async function POST(request:NextRequest,context:Context) {
       } else {
         throw new EditorialError(409,"UNSUPPORTED_MEDIA_SOURCE");
       }
+      if(asset.source_type==="upload" &&
+        ["pdf_cover","video_poster"].includes(asset.preview_type) &&
+        input.fullSourceReviewed!==true) {
+        throw new EditorialError(409,"FULL_SOURCE_REVIEW_REQUIRED");
+      }
       await db.query(
         [
           "UPDATE media_assets SET",
@@ -93,7 +99,9 @@ export async function POST(request:NextRequest,context:Context) {
         ]
       );
       await mediaAudit(db,actor.id,id,"approve",before,"approved",
-        "Nguồn đã được kiểm tra: quyền sử dụng, riêng tư và tính phù hợp nội dung");
+        asset.preview_type==="pdf_cover" || asset.preview_type==="video_poster"
+          ? "Cán bộ xác nhận đã kiểm tra đầy đủ nội dung gốc bằng môi trường độc lập"
+          : "Nguồn đã được kiểm tra: quyền sử dụng, riêng tư và tính phù hợp nội dung");
     } else if (input.action==="reject") {
       if (before!=="pending" || asset.created_by===actor.id)
         throw new EditorialError(409,"SEPARATION_OR_STATUS_INVALID");
