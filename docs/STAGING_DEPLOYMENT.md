@@ -97,8 +97,8 @@ trong PR này.**
 
 ## Gói chạy ứng dụng bằng container (chưa tạo máy chủ)
 Mã nguồn cung cấp Dockerfile nhiều giai đoạn, build Next.js 16 với
-output standalone, runtime Node.js 22 theo tài khoản không phải root
-(UID/GID 1001). Không lưu mật khẩu, tệp .env hay khóa trong image.
+output standalone, runtime Distroless Node.js 22 Debian 13 không có shell, chạy non-root
+(UID/GID 65532). Không lưu mật khẩu, tệp .env hay khóa trong image.
 Không có PostgreSQL, IdP hoặc reverse proxy nằm trong image.
 
 compose.staging.yml là bản mẫu chạy trên máy có hạ tầng riêng:
@@ -128,7 +128,7 @@ không đăng ký domain hoặc khởi chạy dịch vụ thực.
 Repository đã có package-lock.json được quản lý phiên bản, CI và Docker
 dùng npm ci để khóa phụ thuộc ở thời điểm build. GitHub Actions chạy
 npm audit cho dependency production ở mức cảnh báo cao trở lên. Tuy vậy,
-base image node:22-bookworm-slim vẫn là tag có thể di chuyển, chưa khóa
-theo digest; GitHub Actions cũng cần pin commit SHA sau khi kiểm tra.
-Audit npm không kiểm tra toàn bộ CVE của hệ điều hành trong container,
-không thay thế quét image, kiểm toán WAF, MFA hoặc dữ liệu cá nhân.
+hai giai đoạn build và runtime Distroless đều được pin riêng theo digest,
+GitHub Actions pin commit SHA, và Trivy kiểm tra CVE OS mức HIGH/CRITICAL.
+Audit npm kiểm tra thêm thư viện chạy website; các công cụ này vẫn không
+thay thế kiểm tra SBOM, chứng thực image, WAF, MFA hoặc dữ liệu cá nhân.

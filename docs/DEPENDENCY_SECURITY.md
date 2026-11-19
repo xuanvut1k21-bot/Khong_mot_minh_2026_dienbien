@@ -14,12 +14,19 @@
 ## Đánh giá và giới hạn
 - Audit npm dựa trên advisory cơ sở dữ liệu npm tại thời điểm chạy,
   không đảm bảo phát hiện toàn bộ lỗ hổng hoặc supply-chain compromise.
-- Bản base image node:22-bookworm-slim chưa pin digest; cần kiểm tra và
-  cố định digest trước production, đồng thời theo dõi bản vá bảo mật.
-- GitHub Actions checkout@v5 và setup-node@v5 chưa pin commit SHA.
-  Trước production nên dùng SHA đã kiểm chứng và cập nhật có review.
-- Chưa triển khai quét CVE hệ điều hành/container bằng công cụ độc lập
-  (như Trivy/Grype), SBOM và ký xác thực image.
+- Hai giai đoạn deps/builder dùng Node 22 bookworm-slim với digest OCI
+  `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee`. Runtime sử dụng image tối giản Distroless
+  nodejs22-debian13:nonroot với digest `sha256:39c66687298417dbf3ff2fb8b6012c20554494e16414ef7afd07b9abbb45b501`.
+  Cả hai digest lấy bằng docker buildx imagetools inspect trên GitHub Actions.
+  Digest cố định nội dung, KHÔNG tự cập nhật bản vá khi tag upstream đổi.
+- GitHub Actions checkout v5 và setup-node v5 được pin đến full 40-hex
+  commit SHA từ tag upstream đã đối chiếu. Trivy action v0.36.0 cũng
+  được pin SHA của commit được tham chiếu bởi tag phát hành.
+- CI chạy Trivy với image km2026-staging:ci sau build để kiểm tra CVE
+  thuộc gói hệ điều hành (os). HIGH/CRITICAL làm CI lỗi, không bỏ qua
+  bản vá chưa sẵn có; các finding phải được xử lý hoặc đánh giá công khai.
+- Vẫn chưa có SBOM và chữ ký image, chưa quét mọi cấu hình container,
+  không phải chứng nhận an toàn sản phẩm.
 - Lockfile khóa phiên bản npm, nhưng binary native như sharp và nội dung
   image OS có thể khác theo kiến trúc nền tảng. Build/triển khai cần chốt
   kiến trúc và lưu image digest để hỗ trợ rollback.
@@ -43,3 +50,18 @@ libvips, libheif và librsvg. Nâng sharp lên 0.35.5 và cập nhật lockfile.
 Vì cập nhật qua ranh giới minor có thay đổi API/hành vi, thêm smoke
 test xử lý PNG thành WebP bằng các tùy chọn dùng trong worker.
 Điều này không thay thế kiểm thử các tệp thực tế hay fuzz test.
+
+## Quy tắc phát hành image
+- Build digest: `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee` (Node 22 bookworm slim).
+- Runtime digest: `sha256:39c66687298417dbf3ff2fb8b6012c20554494e16414ef7afd07b9abbb45b501`
+  (gcr.io/distroless/nodejs22-debian13:nonroot).
+- Trivy thử nghiệm trên base Debian 12 trước đó phát hiện 37 HIGH/1 CRITICAL,
+  gồm nhiều gói hệ điều hành không cần cho tiến trình Node. Probe riêng
+  trên Distroless Debian 13 đã vượt qua quét OS HIGH/CRITICAL; kết quả
+  cuối cùng phải kiểm tra trên toàn bộ image vừa build, không chỉ base.
+- Khi có bản vá nền mới, kiểm tra registry và ghi lại cả hai digest
+  theo quy trình, chạy npm audit + Trivy + smoke tests.
+- Không nới ngưỡng Trivy, thêm .trivyignore hoặc dùng continue-on-error
+  để che giấu findings chưa được xem xét/đồng ý bởi người chịu trách nhiệm.
+- Trivy phụ thuộc tình trạng kết nối và dữ liệu CVE mới tại thời điểm CI;
+  nếu không tải được cơ sở dữ liệu, job cũng không thể xác nhận an toàn.

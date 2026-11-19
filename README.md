@@ -123,3 +123,10 @@ CI chạy `npm audit --omit=dev --audit-level=high` và sẽ báo lỗi nếu
 phát hiện cảnh báo mức cao/nghiêm trọng của dependency production.
 Dependabot được cấu hình tạo PR cập nhật, không tự merge.
 Chi tiết xem `docs/DEPENDENCY_SECURITY.md`.
+
+## Kiểm tra CVE của Docker và pin SHA GitHub Actions
+Hai giai đoạn build sử dụng Node.js được pin digest; runtime dùng
+Distroless Node.js 22 Debian 13 nonroot pin digest riêng để giảm gói OS.
+Checkout/setup-node và Trivy được pin SHA để tránh tag di động.
+CI chặn CVE OS ở mức HIGH/CRITICAL qua Trivy, không bỏ qua lỗi.
+Chi tiết: `docs/DEPENDENCY_SECURITY.md`.

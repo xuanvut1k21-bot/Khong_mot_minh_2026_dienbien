@@ -25,7 +25,7 @@ services:
       TRAINING_EDGE_RATE_LIMIT_READY: "false"
     ports:
       - "127.0.0.1:3000:3000"
-    user: "1001:1001"
+    user: "65532:65532"
     read_only: true
     tmpfs:
       - /tmp:rw,nosuid,size=64m,mode=1777
@@ -38,7 +38,7 @@ services:
     mem_limit: 768m
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "/nodejs/bin/node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
       timeout: 5s
       start_period: 30s
