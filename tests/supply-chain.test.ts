@@ -5,6 +5,7 @@ import test from "node:test";
 const docker=readFileSync("Dockerfile","utf8");
 const ci=readFileSync(".github/workflows/ci.yml","utf8");
 const staging=readFileSync(".github/workflows/staging-readiness.yml","utf8");
+const attestationGate=readFileSync(".github/workflows/verify-staging-attestation.yml","utf8");
 const sha=/^sha256:[0-9a-f]{64}$/;
 
 test("builder and minimal runtime use separate immutable OCI digests",()=>{
@@ -22,7 +23,7 @@ test("builder and minimal runtime use separate immutable OCI digests",()=>{
 });
 
 test("GitHub workflow actions use complete reviewed 40-character commit SHA",()=>{
- for(const [path,workflow] of [["ci",ci],["staging",staging]] as const){
+ for(const [path,workflow] of [["ci",ci],["staging",staging],["attestationGate",attestationGate]] as const){
    const used=[...workflow.matchAll(/uses:\s*([^\s#]+)\s*(?:#.*)?$/gm)]
      .map(match=>match[1]);
    assert.ok(used.length>=2,path+" missing expected actions");
@@ -39,4 +40,14 @@ test("GitHub workflow actions use complete reviewed 40-character commit SHA",()=
  assert.match(ci,/format: cyclonedx/);
  assert.match(ci,/scripts\/sbom-evidence\.mjs/);
  assert.match(ci,/actions\/upload-artifact@[a-f0-9]{40}/);
+});
+
+test("release image attestation verification is manual and cannot deploy",()=>{
+ assert.match(attestationGate,/workflow_dispatch:/);
+ assert.match(attestationGate,/environment: staging/);
+ assert.match(attestationGate,/github\.ref == 'refs\/heads\/main'/);
+ assert.match(attestationGate,/scripts\/verify-release-attestation\.mjs/);
+ assert.match(attestationGate,/attestations: read/);
+ assert.doesNotMatch(attestationGate,/attestations: write/);
+ assert.doesNotMatch(attestationGate,/(docker push|kubectl|helm upgrade|ssh\s|deployments: write)/);
 });

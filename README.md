@@ -137,3 +137,11 @@ xác nhận định dạng/danh mục thành phần, lập SHA-256, ghi commit v
 image ID cục bộ, rồi lưu tệp trong Actions artifacts 14 ngày.
 **Chưa ký số/attest image hoặc push registry.** Xem
 `docs/SBOM_AND_ATTESTATION.md`.
+
+
+## Cổng xác minh trước staging – mặc định từ chối
+Có workflow thủ công verify-staging-attestation.yml kiểm tra chữ ký
+image và CycloneDX SBOM với GitHub CLI, đúng workflow, commit,
+repository, branch main và cùng OCI digest. **Không phát hành,
+không deploy, không bỏ qua điều kiện khi thiếu chữ ký**.
+Tham khảo docs/RELEASE_ATTESTATION_GATE.md.

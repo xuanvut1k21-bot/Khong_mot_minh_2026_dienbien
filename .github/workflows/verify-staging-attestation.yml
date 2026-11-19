@@ -1,0 +1,38 @@
+name: Verify signed staging image (manual, no deployment)
+on:
+  workflow_dispatch:
+    inputs:
+      image_ref:
+        description: Immutable GHCR image ref (ghcr.io/OWNER/REPO@sha256:...)
+        type: string
+        required: true
+      source_sha:
+        description: Full 40-hex Git commit of signed build from main
+        type: string
+        required: true
+permissions:
+  contents: read
+  packages: read
+  attestations: read
+jobs:
+  verify:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    environment: staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Check out verified release policy
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Authenticate to private GHCR for registry reads only
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
+      - name: Verify actual signed image provenance AND SBOM predicate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_IMAGE_REF: ${{ inputs.image_ref }}
+          RELEASE_SOURCE_SHA: ${{ inputs.source_sha }}
+        run: node scripts/verify-release-attestation.mjs

@@ -38,6 +38,7 @@ jobs:
       - run: npm run media:compat
       - run: npm run supply-chain:test
       - run: node --test tests/sbom-evidence.test.mjs
+      - run: node --test tests/release-attestation-policy.test.mjs
       - run: npm run training:unit
       - run: npm run staging:test
       - run: npm run build
