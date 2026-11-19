@@ -145,3 +145,10 @@ image và CycloneDX SBOM với GitHub CLI, đúng workflow, commit,
 repository, branch main và cùng OCI digest. **Không phát hành,
 không deploy, không bỏ qua điều kiện khi thiếu chữ ký**.
 Tham khảo docs/RELEASE_ATTESTATION_GATE.md.
+
+## Kiểm toán điều kiện phê duyệt phát hành
+Workflow xác minh chữ ký còn yêu cầu GitHub Environment staging có
+required reviewers, cấm tự phê duyệt, main protected và có review/CI
+bắt buộc; dùng GitHub CLI >=2.97.0 (vá CVE-2026-64655).
+Cần cấp STAGING_GOVERNANCE_AUDIT_TOKEN (chỉ Administration:read).
+Thiếu bất kỳ điều kiện nào sẽ chặn phát hành. Chưa có image ký thật.

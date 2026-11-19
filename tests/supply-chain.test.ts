@@ -55,3 +55,16 @@ test("release image attestation verification is manual and cannot deploy",()=>{
  assert.doesNotMatch(attestationGate,/attestations: write/);
  assert.doesNotMatch(attestationGate,/(docker push|kubectl|helm upgrade|ssh\s|deployments: write)/);
 });
+
+test("signing gate requires live governance checks and patched gh",()=>{
+ const signed=readFileSync(".github/workflows/verify-staging-attestation.yml","utf8");
+ const script=readFileSync("scripts/verify-release-attestation.mjs","utf8");
+ assert.match(signed,/scripts\/check-release-governance\.mjs/);
+ assert.match(signed,/STAGING_GOVERNANCE_AUDIT_TOKEN/);
+ assert.match(signed,/scripts\/verify-release-attestation\.mjs/);
+ assert.ok(signed.indexOf("check-release-governance.mjs") <
+   signed.indexOf("verify-release-attestation.mjs"),
+   "Independent reviewer checks must precede signature validation");
+ assert.match(script,/requirePatchedGhVersion\(version\.stdout\)/);
+ assert.doesNotMatch(signed,/deployments: write/);
+});

@@ -3,6 +3,7 @@
 // attestations must both target the identical registry manifest digest.
 import {spawnSync} from "node:child_process";
 import {appendFileSync} from "node:fs";
+import {requirePatchedGhVersion} from "../lib/release-governance-policy.mjs";
 import {
   releasePolicy, requireVerifiedStatement,
   PROVENANCE_PREDICATE, CYCLONEDX_PREDICATE
@@ -30,6 +31,12 @@ function githubVerify(policy,predicateType){
 }
 
 try{
+  const version=spawnSync("gh",["version"],{
+    encoding:"utf8",timeout:10000,maxBuffer:4096
+  });
+  if(version.error||version.status!==0)
+    throw new Error("GH_VERSION_UNAVAILABLE");
+  requirePatchedGhVersion(version.stdout);
   if(!process.env.GH_TOKEN)throw new Error("GITHUB_CREDENTIALS_MISSING");
   const policy=releasePolicy({
     repository:process.env.GITHUB_REPOSITORY,

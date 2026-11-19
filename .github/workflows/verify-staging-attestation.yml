@@ -14,6 +14,7 @@ permissions:
   contents: read
   packages: read
   attestations: read
+  deployments: read
 jobs:
   verify:
     if: ${{ github.ref == 'refs/heads/main' }}
@@ -23,6 +24,10 @@ jobs:
     steps:
       - name: Check out verified release policy
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Verify staging protection, independent reviewers and patched GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.STAGING_GOVERNANCE_AUDIT_TOKEN }}
+        run: node scripts/check-release-governance.mjs
       - name: Authenticate to private GHCR for registry reads only
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
