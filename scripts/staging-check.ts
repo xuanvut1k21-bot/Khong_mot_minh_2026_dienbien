@@ -12,17 +12,15 @@ async function databaseReadiness():Promise<StagingCheck[]>{
     connectionTimeoutMillis:4000,idleTimeoutMillis:1000
   });
   try{
-    const response=await db.query({
-      text:[
+    const response=await db.query([
+
         "SELECT to_regclass('public.activities') IS NOT NULL AS activities,",
         "to_regclass('public.media_assets') IS NOT NULL AS media,",
         "to_regclass('public.admin_users') IS NOT NULL AS admin,",
         "to_regclass('public.training_learners') IS NOT NULL AS training,",
         "to_regclass('public.training_survey_handoffs') IS NOT NULL AS surveys,",
         "to_regclass('public.training_learner_rate_limits') IS NOT NULL AS limits"
-      ].join(" "),
-      query_timeout:5000
-    });
+      ].join(" "));
     const row=response.rows[0]??{};
     return Object.entries(row).map(([key,ok])=>({
       id:"schema_"+key,ok:ok===true,
