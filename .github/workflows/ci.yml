@@ -40,6 +40,7 @@ jobs:
       - run: node --test tests/sbom-evidence.test.mjs
       - run: node --test tests/release-attestation-policy.test.mjs
       - run: node --test tests/release-governance-policy.test.mjs
+      - run: node --test tests/pr-chain-audit.test.mjs
       - run: npm run training:unit
       - run: npm run staging:test
       - run: npm run build

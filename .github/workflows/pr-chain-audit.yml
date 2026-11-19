@@ -1,0 +1,36 @@
+name: Audit stacked PR merge readiness (manual, no merge)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type AUDIT_NO_MERGE to run a read-only audit
+        required: true
+        type: string
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+jobs:
+  pr-chain-audit:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.confirm == 'AUDIT_NO_MERGE' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out audit policy
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "22"
+      - name: Read GitHub PR chain, approvals, head CI and main protection
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/audit-pr-chain.mjs
+      - name: Preserve independent readiness findings for review
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: stacked-pr-audit
+          path: artifacts/pr-chain-audit.json
+          if-no-files-found: warn
+          retention-days: 14
