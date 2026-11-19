@@ -1,6 +1,7 @@
 -- Training editorial roles and state transitions. Synthetic only, always rolled back.
 BEGIN;
-DO $$
+DO $
+#variable_conflict use_variable
 DECLARE
  editor_id UUID; reviewer_id UUID; tech_id UUID; v_question_id UUID;
  can_edit BOOLEAN; can_approve BOOLEAN; n INTEGER;
