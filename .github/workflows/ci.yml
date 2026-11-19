@@ -56,3 +56,19 @@ jobs:
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/training-editorial.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/009_training_survey_handoffs.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/training-survey-handoffs.sql
+
+      - name: Integration training journey (synthetic users and signed mock survey)
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/km_test
+          APP_BASE_URL: http://localhost:4127
+          TRAINING_PRIVACY_NOTICE_URL: https://privacy.example.test/training
+          TRAINING_REGISTRATION_ENABLED: "true"
+          TRAINING_EXAM_ENABLED: "true"
+          TRAINING_SURVEY_WEBHOOK_ENABLED: "true"
+          TRAINING_SURVEY_LAUNCH_ENABLED: "true"
+          TRAINING_SURVEY_WEBHOOK_SECRET: "ci-synthetic-HMAC-key-not-for-production-0123456789"
+          TRAINING_SURVEY_PROVIDER_HOST: surveys.example.test
+          TRAINING_SURVEY_1_URL: https://surveys.example.test/lesson-1
+          TRAINING_SURVEY_9_URL: https://surveys.example.test/lesson-9
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run training:journey

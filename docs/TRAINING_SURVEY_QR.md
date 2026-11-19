@@ -79,3 +79,17 @@ Việc tạm khóa tạo học viên mới hoặc tạm khóa **lượt khảo s
 tự làm mất hiệu lực của một lượt khảo sát đã phát hành: callback hợp lệ
 vẫn được xét trong hạn 2 giờ nếu cấu hình webhook còn bật và học liệu
 chưa bị thu hồi. Có thể tắt webhook riêng trong sự cố bảo mật.
+
+## Bài kiểm thử HTTP tích hợp trong CI (bổ sung sau bước 4.3)
+`tests/training-journey.integration.ts` chạy website Next.js trên localhost
+và PostgreSQL test với đăng ký, 9 phiên học, 90 câu hỏi hoàn toàn tổng hợp.
+Không có callback từ nhà cung cấp khảo sát thật: CI chỉ đóng vai provider,
+ký HMAC bằng khóa giả trong môi trường cách ly.
+Bài kiểm thử khẳng định người học khác không đọc được đề, không trả đáp án
+đúng ra API, khảo sát chưa xác minh không mở thi, chỉ callback hợp lệ
+mới ghi nhận, bài làm 15/20 chưa đạt và 16/20 được chúc mừng.
+Kiểm tra dữ liệu học viên được xóa theo yêu cầu.
+
+Kết quả CI thành công **không thay thế** kiểm thử tích hợp provider thật,
+tải đồng thời trên môi trường triển khai, rate limiting ở cổng và rà soát
+pháp lý về dữ liệu cá nhân.
