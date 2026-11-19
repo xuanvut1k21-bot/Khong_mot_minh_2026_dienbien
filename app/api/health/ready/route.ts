@@ -8,14 +8,13 @@ export async function GET(){
       status:503,headers:{"Cache-Control":"no-store"}
     });
   try{
-    const result=await getDatabasePool().query({
-      text:[
+    const result=await getDatabasePool().query([
+
         "SELECT to_regclass('public.activities') IS NOT NULL AS activities,",
         "to_regclass('public.admin_users') IS NOT NULL AS auth,",
         "to_regclass('public.training_learners') IS NOT NULL AS training,",
         "to_regclass('public.training_learner_rate_limits') IS NOT NULL AS throttles"
-      ].join(" "),query_timeout:3000
-    });
+      ].join(" "));
     if(result.rowCount===1 &&
       Object.values(result.rows[0]).every(x=>x===true)){
       return NextResponse.json({status:"ready"},{
