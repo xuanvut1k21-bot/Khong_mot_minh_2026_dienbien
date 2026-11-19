@@ -1,15 +1,26 @@
 import "server-only";
-import { trainingRegistrationEnabled } from "@/lib/server/training-security";
-
 export type SurveyLesson=1|9;
+export function surveyVerificationReady():boolean {
+  if(!process.env.DATABASE_URL ||
+    process.env.TRAINING_SURVEY_WEBHOOK_ENABLED!=="true" ||
+    Buffer.byteLength(process.env.TRAINING_SURVEY_WEBHOOK_SECRET??"","utf8")<32)
+    return false;
+  try{
+    const app=new URL(process.env.APP_BASE_URL??"");
+    const notice=new URL(process.env.TRAINING_PRIVACY_NOTICE_URL??"");
+    const secure=app.protocol==="https:" ||
+      (process.env.NODE_ENV!=="production" && app.protocol==="http:" &&
+       app.hostname==="localhost");
+    return secure && app.pathname==="/" && notice.protocol==="https:";
+  }catch{return false;}
+}
 export function surveyLesson(value:string):SurveyLesson|null {
   return value==="1"?1:value==="9"?9:null;
 }
 export function getSurveyConfiguration(lesson:SurveyLesson):URL|null {
-  if (!trainingRegistrationEnabled() ||
-      process.env.TRAINING_SURVEY_LAUNCH_ENABLED!=="true" ||
-      process.env.TRAINING_SURVEY_WEBHOOK_ENABLED!=="true" ||
-      (process.env.TRAINING_SURVEY_WEBHOOK_SECRET?.length??0)<32) return null;
+  // Disabling new enrollments must NOT invalidate existing survey responses.
+  if (!surveyVerificationReady() ||
+      process.env.TRAINING_SURVEY_LAUNCH_ENABLED!=="true") return null;
   const host=process.env.TRAINING_SURVEY_PROVIDER_HOST?.trim().toLowerCase();
   const raw=process.env[lesson===1?"TRAINING_SURVEY_1_URL":"TRAINING_SURVEY_9_URL"];
   if(!host||!raw||!host.includes(".")||host==="localhost")return null;

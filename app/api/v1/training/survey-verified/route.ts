@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getDatabasePool } from "@/lib/server/db";
 import { tokenDigest, verifySurveySignature } from "@/lib/server/training-security";
-import { getSurveyConfiguration } from "@/lib/server/training-surveys";
+import { surveyVerificationReady } from "@/lib/server/training-surveys";
 
 export const runtime="nodejs";
 const schema=z.object({
@@ -34,7 +34,7 @@ async function readSignedBody(request:NextRequest):Promise<string|null>{
 }
 
 export async function POST(request:NextRequest){
-  if(process.env.TRAINING_SURVEY_WEBHOOK_ENABLED!=="true")
+  if(!surveyVerificationReady())
     return fail("SURVEY_VERIFICATION_DISABLED",503);
   if(request.headers.get("content-type")?.split(";")[0].trim().toLowerCase()!=="application/json")
     return fail("INVALID_CONTENT_TYPE",415);
@@ -50,8 +50,8 @@ export async function POST(request:NextRequest){
   let body:z.infer<typeof schema>;
   try{body=schema.parse(JSON.parse(raw));}
   catch{return fail("INVALID_PAYLOAD",400);}
-  if(!getSurveyConfiguration(body.lessonNumber))
-    return fail("SURVEY_NOT_CONFIGURED",503);
+  // Callback may finish while new launches are temporarily closed.
+  // The existing handoff and HMAC still prove the provider's correlation.
 
   const db=await getDatabasePool().connect();
   try{

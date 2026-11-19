@@ -74,3 +74,8 @@ Không đưa URL khảo sát chưa xác minh vào kho mã.
   tổng hợp được ROLLBACK, **không xác minh provider đã hoạt động**.
 
 Only survey confirmation rows attached to a consumed correlation handoff count toward training and exam eligibility. Any earlier uncorrelated confirmations are not automatically trusted.
+
+Việc tạm khóa tạo học viên mới hoặc tạm khóa **lượt khảo sát mới** không
+tự làm mất hiệu lực của một lượt khảo sát đã phát hành: callback hợp lệ
+vẫn được xét trong hạn 2 giờ nếu cấu hình webhook còn bật và học liệu
+chưa bị thu hồi. Có thể tắt webhook riêng trong sự cố bảo mật.
