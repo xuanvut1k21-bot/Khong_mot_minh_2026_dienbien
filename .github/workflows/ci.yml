@@ -104,7 +104,7 @@ jobs:
       - name: Smoke-test isolated production-mode container without secrets
         run: |
           docker run -d --rm --name km2026-ci \
-            --user 1001:1001 \
+            --user 65532:65532 \
             --read-only \
             --tmpfs /tmp:rw,nosuid,size=64m,mode=1777 \
             --tmpfs /app/.next/cache:rw,nosuid,size=64m \

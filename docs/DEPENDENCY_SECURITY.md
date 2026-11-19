@@ -14,10 +14,11 @@
 ## Đánh giá và giới hạn
 - Audit npm dựa trên advisory cơ sở dữ liệu npm tại thời điểm chạy,
   không đảm bảo phát hiện toàn bộ lỗ hổng hoặc supply-chain compromise.
-- Cả ba giai đoạn Docker dùng node:22-bookworm-slim với digest OCI
-  `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee`, lấy từ lệnh docker buildx imagetools inspect trong
-  GitHub Actions. Digest cố định nội dung tại thời điểm kiểm tra, KHÔNG
-  tự cập nhật bản vá nếu tag phía upstream di chuyển.
+- Hai giai đoạn deps/builder dùng Node 22 bookworm-slim với digest OCI
+  `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee`. Runtime sử dụng image tối giản Distroless
+  nodejs22-debian13:nonroot với digest `sha256:39c66687298417dbf3ff2fb8b6012c20554494e16414ef7afd07b9abbb45b501`.
+  Cả hai digest lấy bằng docker buildx imagetools inspect trên GitHub Actions.
+  Digest cố định nội dung, KHÔNG tự cập nhật bản vá khi tag upstream đổi.
 - GitHub Actions checkout v5 và setup-node v5 được pin đến full 40-hex
   commit SHA từ tag upstream đã đối chiếu. Trivy action v0.36.0 cũng
   được pin SHA của commit được tham chiếu bởi tag phát hành.
@@ -51,9 +52,15 @@ test xử lý PNG thành WebP bằng các tùy chọn dùng trong worker.
 Điều này không thay thế kiểm thử các tệp thực tế hay fuzz test.
 
 ## Quy tắc phát hành image
-- Digest hiện tại: `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee` (node:22-bookworm-slim).
-- Khi có bản vá nền mới, kiểm tra lại registry và ghi digest mới trong
-  cả ba giai đoạn Dockerfile, chạy npm audit + Trivy + smoke tests.
+- Build digest: `sha256:e9f565d32859f0cbfb52125eafe8be39390f24dac302dc3cdf566e8ba3ab21ee` (Node 22 bookworm slim).
+- Runtime digest: `sha256:39c66687298417dbf3ff2fb8b6012c20554494e16414ef7afd07b9abbb45b501`
+  (gcr.io/distroless/nodejs22-debian13:nonroot).
+- Trivy thử nghiệm trên base Debian 12 trước đó phát hiện 37 HIGH/1 CRITICAL,
+  gồm nhiều gói hệ điều hành không cần cho tiến trình Node. Probe riêng
+  trên Distroless Debian 13 đã vượt qua quét OS HIGH/CRITICAL; kết quả
+  cuối cùng phải kiểm tra trên toàn bộ image vừa build, không chỉ base.
+- Khi có bản vá nền mới, kiểm tra registry và ghi lại cả hai digest
+  theo quy trình, chạy npm audit + Trivy + smoke tests.
 - Không nới ngưỡng Trivy, thêm .trivyignore hoặc dùng continue-on-error
   để che giấu findings chưa được xem xét/đồng ý bởi người chịu trách nhiệm.
 - Trivy phụ thuộc tình trạng kết nối và dữ liệu CVE mới tại thời điểm CI;

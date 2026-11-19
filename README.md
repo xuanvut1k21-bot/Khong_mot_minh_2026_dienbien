@@ -125,7 +125,8 @@ Dependabot được cấu hình tạo PR cập nhật, không tự merge.
 Chi tiết xem `docs/DEPENDENCY_SECURITY.md`.
 
 ## Kiểm tra CVE của Docker và pin SHA GitHub Actions
-Ba giai đoạn Docker được pin chung đến image digest được GitHub Actions
-xác minh; checkout/setup-node và Trivy được pin SHA để tránh tag di động.
+Hai giai đoạn build sử dụng Node.js được pin digest; runtime dùng
+Distroless Node.js 22 Debian 13 nonroot pin digest riêng để giảm gói OS.
+Checkout/setup-node và Trivy được pin SHA để tránh tag di động.
 CI chặn CVE OS ở mức HIGH/CRITICAL qua Trivy, không bỏ qua lỗi.
 Chi tiết: `docs/DEPENDENCY_SECURITY.md`.

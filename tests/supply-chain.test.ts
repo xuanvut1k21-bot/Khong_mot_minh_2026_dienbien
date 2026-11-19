@@ -7,13 +7,18 @@ const ci=readFileSync(".github/workflows/ci.yml","utf8");
 const staging=readFileSync(".github/workflows/staging-readiness.yml","utf8");
 const sha=/^sha256:[0-9a-f]{64}$/;
 
-test("all three Node build stages share one immutable multiarch digest",()=>{
-  const images=[...docker.matchAll(/^FROM (node:[^\s]+) AS (\w+)$/gm)];
-  assert.deepEqual(images.map(m=>m[2]),["deps","builder","runtime"]);
-  const refs=images.map(m=>m[1]);
-  assert.equal(new Set(refs).size,1);
-  assert.equal(refs[0].split("@")[0],"node:22-bookworm-slim");
-  assert.match(refs[0].split("@")[1]??"",sha);
+test("builder and minimal runtime use separate immutable OCI digests",()=>{
+ const stages=[...docker.matchAll(/^FROM (\S+) AS (\w+)$/gm)];
+ assert.deepEqual(stages.map(m=>m[2]),["deps","builder","runtime"]);
+ const [deps,builder,runtime]=stages.map(m=>m[1]);
+ assert.equal(deps,builder);
+ assert.equal(deps.split("@")[0],"node:22-bookworm-slim");
+ assert.match(deps.split("@")[1]??"",sha);
+ assert.equal(runtime.split("@")[0],"gcr.io/distroless/nodejs22-debian13:nonroot");
+ assert.match(runtime.split("@")[1]??"",sha);
+ assert.notEqual(runtime,deps);
+ assert.match(docker,/USER 65532:65532/);
+ assert.match(docker,/CMD \["server.js"\]/);
 });
 
 test("GitHub workflow actions use complete reviewed 40-character commit SHA",()=>{
