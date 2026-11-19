@@ -81,3 +81,31 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/km_test
           TRAINING_LEARNER_RETENTION_DAYS: "180"
         run: npm run training:maintenance-test
+
+      - name: Build disposable staging image (no registry or deploy)
+        run: docker build --pull --tag km2026-staging:ci .
+      - name: Smoke-test isolated production-mode container without secrets
+        run: |
+          docker run -d --rm --name km2026-ci \
+            --user 1001:1001 \
+            --read-only \
+            --tmpfs /tmp:rw,nosuid,size=64m,mode=1777 \
+            --tmpfs /app/.next/cache:rw,nosuid,size=64m \
+            --cap-drop=ALL --security-opt=no-new-privileges --pids-limit=128 \
+            -p 127.0.0.1:4128:3000 km2026-staging:ci
+          trap 'docker rm -f km2026-ci >/dev/null 2>&1 || true' EXIT
+          ok=0
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent --max-time 2 http://127.0.0.1:4128/api/health/live >/dev/null; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+          test "$ok" = 1
+          live=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:4128/api/health/live)
+          ready=$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:4128/api/health/ready)
+          test "$live" = 200
+          test "$ready" = 503
+          curl --fail --silent http://127.0.0.1:4128/api/v1/training/overview | grep -q '"registrationOpen":false'
+          echo "Staging container: live 200, DB readiness 503, training registration closed."

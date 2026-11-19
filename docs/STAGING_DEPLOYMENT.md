@@ -93,3 +93,41 @@ Hạ phiên bản ứng dụng chỉ an toàn khi schema còn tương thích.
 
 **Không có triển khai máy chủ hay cấu hình dịch vụ thật được thực hiện
 trong PR này.**
+
+
+## Gói chạy ứng dụng bằng container (chưa tạo máy chủ)
+Mã nguồn cung cấp Dockerfile nhiều giai đoạn, build Next.js 16 với
+output standalone, runtime Node.js 22 theo tài khoản không phải root
+(UID/GID 1001). Không lưu mật khẩu, tệp .env hay khóa trong image.
+Không có PostgreSQL, IdP hoặc reverse proxy nằm trong image.
+
+compose.staging.yml là bản mẫu chạy trên máy có hạ tầng riêng:
+- Chỉ bắt đầu bằng lệnh minh thị sau khi được phê duyệt:
+  docker compose -f compose.staging.yml --profile staging up --build -d
+- Cổng HTTP chỉ bind 127.0.0.1:3000; reverse proxy HTTPS do quản trị
+  viên triển khai riêng, kết nối localhost, có chứng chỉ và rate-limit.
+- File .env.staging được quản trị viên tự tạo trên máy staging trong
+  secret store hoặc file ACL chặt chẽ, tuyệt đối không commit. Cần
+  APP_BASE_URL, DATABASE_URL TLS, OIDC endpoints và các secrets được
+  cấp từ hệ thống thật. Không dùng biến thử nghiệm của CI.
+- Các công tắc tải media, đăng ký, thi, khảo sát và xóa dữ liệu bắt buộc
+  false trong Compose. Không nên sửa true trước khi có nghiệm thu.
+- Container chạy non-root, hạn chế capabilities, PID/RAM, filesystem
+  chỉ đọc với tmpfs cho /tmp và bộ nhớ cache Next.js.
+- /api/health/live dùng cho kiểm tra tiến trình; /api/health/ready
+  mới phản ánh DB/schema. Nếu không có DB, readiness phải trả 503.
+- Tập diễn tập khi database lỗi, kiểm tra proxy, giám sát và phương án
+  rollback image/backup schema trước khi mở người dùng.
+
+GitHub Actions chỉ build image container và chạy smoke test không có
+secrets: kỳ vọng live HTTP 200, readiness HTTP 503 vì DB chưa cấu hình,
+và training.registrationOpen=false. Không chạy docker push,
+không đăng ký domain hoặc khởi chạy dịch vụ thực.
+
+### Giới hạn chất lượng image
+Repository hiện chưa có package-lock.json được quản lý phiên bản;
+Dockerfile dùng npm install tương tự CI hiện hành, do đó các bản build
+chưa hoàn toàn lặp lại được. Phải tạo, kiểm duyệt và commit lockfile,
+quét lỗ hổng dependency, xác thực nguồn base image rồi mới coi là
+pipeline build phục vụ production. Không coi smoke test là kiểm toán
+container, WAF, MFA hoặc chứng minh tuân thủ dữ liệu.

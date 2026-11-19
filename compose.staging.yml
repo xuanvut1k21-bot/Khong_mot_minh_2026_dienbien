@@ -1,0 +1,45 @@
+# This file NEVER creates DNS, TLS certificates, database users or admin accounts.
+# Use only after a security review. All external credentials are supplied at runtime.
+# Access is restricted to localhost; deploy a trusted HTTPS reverse proxy separately.
+services:
+  website:
+    profiles: ["staging"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: km2026-staging:local
+    env_file:
+      - path: .env.staging
+        required: true
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      MEDIA_IMAGE_UPLOADS_ENABLED: "false"
+      MEDIA_PDF_PREVIEW_ENABLED: "false"
+      MEDIA_VIDEO_POSTER_ENABLED: "false"
+      TRAINING_REGISTRATION_ENABLED: "false"
+      TRAINING_EXAM_ENABLED: "false"
+      TRAINING_SURVEY_WEBHOOK_ENABLED: "false"
+      TRAINING_SURVEY_LAUNCH_ENABLED: "false"
+      TRAINING_RETENTION_PURGE_ENABLED: "false"
+      TRAINING_EDGE_RATE_LIMIT_READY: "false"
+    ports:
+      - "127.0.0.1:3000:3000"
+    user: "1001:1001"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,size=64m,mode=1777
+      - /app/.next/cache:rw,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    mem_limit: 768m
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
