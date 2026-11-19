@@ -1,0 +1,21 @@
+name: Temporary verified Node base digest capture
+on:
+  push:
+    branches: [feat/container-image-supply-chain-scan]
+permissions:
+  contents: read
+jobs:
+  digest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Inspect official multi-platform Node 22 slim image
+        shell: bash
+        run: |
+          set -euo pipefail
+          digest="$(docker buildx imagetools inspect docker.io/library/node:22-bookworm-slim | awk '/^Digest:/ {print $2; exit}')"
+          if [[ ! "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+            echo "Invalid manifest digest"
+            exit 1
+          fi
+          echo "VERIFIED_NODE_INDEX_DIGEST=$digest"
