@@ -1,72 +1,74 @@
-// Read-only GitHub audit. Do not use as a substitute for independent review.
-// Deliberately exits nonzero when any PR, CI, protection or review is inadequate.
+// Read-only; fail closed on unavailable governance evidence.
 import {spawnSync} from "node:child_process";
 import {mkdirSync,writeFileSync,appendFileSync} from "node:fs";
 import {auditStack} from "../lib/pr-chain-audit.mjs";
-
 const repo=process.env.GITHUB_REPOSITORY;
 if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo??"")||!process.env.GH_TOKEN){
-  console.error("PR_CHAIN_AUDIT_BLOCKED: github repository or read-only credentials unavailable");
+  console.error("PR_CHAIN_AUDIT_BLOCKED: missing repository or token");
   process.exit(1);
 }
 function get(path){
-  const result=spawnSync("gh",["api","--method","GET","repos/"+repo+"/"+path],{
-    encoding:"utf8",timeout:30000,maxBuffer:2*1024*1024,env:process.env
+  const r=spawnSync("gh",["api","--method","GET","repos/"+repo+"/"+path],{
+    encoding:"utf8",timeout:30000,maxBuffer:8*1024*1024,env:process.env
   });
-  if(result.error||result.status!==0)throw new Error("GITHUB_READ_FAILED");
-  return JSON.parse(result.stdout);
+  if(r.error||r.status!==0)throw new Error("GITHUB_READ_FAILED: "+path.split("?")[0]);
+  return JSON.parse(r.stdout);
+}
+function completeList(path){
+  const result=[];
+  for(let page=1;page<=20;page++){
+    const separator=path.includes("?")?"&":"?";
+    const batch=get(path+separator+"per_page=100&page="+page);
+    if(!Array.isArray(batch))throw new Error("EXPECTED_LIST");
+    result.push(...batch);
+    if(batch.length<100)return result;
+  }
+  throw new Error("PAGINATION_LIMIT_REACHED");
 }
 async function main(){
-  const pulls=get("pulls?state=all&per_page=100")
-    .filter(p=>Number.isInteger(p.number)&&p.number>=1)
-    .sort((a,b)=>a.number-b.number);
-  if(pulls.length===0||pulls.length===100)
-    throw new Error("EMPTY_OR_PAGINATED_PR_STACK");
+  const pulls=completeList("pulls?state=all").sort((a,b)=>a.number-b.number);
+  if(!pulls.length)throw new Error("EMPTY_PR_STACK");
   const branch=get("branches/main");
-  const comparisons={};
-  const reviewsByPr={};
-  const runsByPr={};
-  // Fetch serially to honor GitHub rate controls and avoid unbounded concurrency.
-  for(let i=0;i<pulls.length;i++){
-    const p=pulls[i];
-    const baseSha=i===0?branch.commit.sha:pulls.find(x=>x.number===p.number-1)?.head?.sha;
-    if(!baseSha)throw new Error("MISSING_ANCESTOR");
+  // The full branch protection endpoint is intentionally mandatory. A public
+  // 'protected:true' flag alone does not establish review/CI/admin controls.
+  const protection=get("branches/main/protection");
+  const comparisons={},reviewsByPr={},checksByPr={},runsByPr={};
+  for(const p of pulls){
+    if(p.state==="closed"&&p.merged_at)continue;
+    const baseSha=p.base?.sha;
+    if(!/^[a-f0-9]{40}$/i.test(baseSha??""))throw new Error("UNKNOWN_BASE_SHA");
     comparisons[p.number]=get("compare/"+baseSha+"..."+p.head.sha);
-    reviewsByPr[p.number]=get("pulls/"+p.number+"/reviews?per_page=100");
-    if(reviewsByPr[p.number].length===100)
-      throw new Error("PAGINATED_REVIEWS_REQUIRE_MANUAL_AUDIT");
-    runsByPr[p.number]=get("actions/runs?branch="+
-      encodeURIComponent(p.head.ref)+"&per_page=30").workflow_runs;
+    reviewsByPr[p.number]=completeList("pulls/"+p.number+"/reviews");
+    const checkData=get("commits/"+p.head.sha+"/check-runs?per_page=100");
+    if(!Array.isArray(checkData.check_runs)||checkData.total_count>100)
+      throw new Error("CHECK_RUN_PAGINATION_UNVERIFIED");
+    checksByPr[p.number]=checkData.check_runs;
+    // Query by SHA instead of by branch name to prevent stale branch successes.
+    const runs=get("actions/runs?head_sha="+encodeURIComponent(p.head.sha)+"&per_page=100");
+    if(!Array.isArray(runs.workflow_runs)||runs.total_count>100)
+      throw new Error("WORKFLOW_RUN_PAGINATION_UNVERIFIED");
+    runsByPr[p.number]=runs.workflow_runs;
   }
-  const report=auditStack({pulls,main:branch,comparisons,reviewsByPr,runsByPr});
+  const report=auditStack({pulls,main:branch,protection,comparisons,reviewsByPr,checksByPr,runsByPr});
   report.generatedAt=new Date().toISOString();
   mkdirSync("artifacts",{recursive:true});
-  writeFileSync("artifacts/pr-chain-audit.json",JSON.stringify(report,null,2)+"\n",
-    {mode:0o600,flag:"w"});
+  writeFileSync("artifacts/pr-chain-audit.json",JSON.stringify(report,null,2)+"\n",{mode:0o600});
   const summary=[
-    "## Pull request chain audit — "+(report.ready?"READY FOR HUMAN REVIEW":"NO-GO"),
-    "",
+    "## PR chain audit — "+(report.ready?"TECHNICAL PRECHECK PASSED":"NO-GO"),"",
     "| Item | Result |","|---|---|",
     "| PRs | "+report.prCount+" |",
-    "| Ancestry verified | "+report.ancestriesVerifiedCount+" |",
-    "| Latest head CI successful | "+report.headCiSuccessCount+" |",
-    "| PRs with reviewer approval of current head | "+report.approvedCount+" |",
-    "| Draft PRs | "+report.draftCount+" |",
-    "| Protected main | "+(report.protectedMain?"Yes":"NO")+" |",
-    "| Blockers | "+report.blockers.length+" |",
-    "",
-    "This is a read-only audit. It does not approve PRs, merge code, issue credentials or deploy."
+    "| Merged prefix | "+report.mergedCount+" |",
+    "| Verified open ancestries | "+report.ancestriesVerifiedCount+" |",
+    "| Passing head CI | "+report.headCiSuccessCount+" |",
+    "| Approvals | "+report.approvedCount+" |",
+    "| Blocking findings | "+report.blockers.length+" |","",
+    "Read-only result. Human security/privacy review and staging evidence remain mandatory."
   ].join("\n")+"\n";
-  if(process.env.GITHUB_STEP_SUMMARY)
-    appendFileSync(process.env.GITHUB_STEP_SUMMARY,summary);
-  console.log("PR_CHAIN_AUDIT: "+(report.ready?"READY_FOR_INDEPENDENT_REVIEW":"BLOCKED")+
-    ", PRs "+report.prCount+
-    ", CI success "+report.headCiSuccessCount+
-    ", approved "+report.approvedCount+
-    ", blockers "+report.blockers.length);
+  if(process.env.GITHUB_STEP_SUMMARY)appendFileSync(process.env.GITHUB_STEP_SUMMARY,summary);
+  console.log("PR_CHAIN_AUDIT: "+(report.ready?"PRECHECK_PASS":"BLOCKED")+", blockers "+report.blockers.length);
   if(!report.ready)process.exitCode=1;
 }
-main().catch(error=>{
-  console.error("PR_CHAIN_AUDIT_BLOCKED: "+(error instanceof Error?error.message:"UNAVAILABLE"));
+main().catch(e=>{
+  console.error("PR_CHAIN_AUDIT_BLOCKED: "+(e instanceof Error?e.message:"UNAVAILABLE"));
   process.exitCode=1;
 });
