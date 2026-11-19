@@ -53,3 +53,14 @@ truy cập, backup/restore hay kiểm toán quyền riêng tư trẻ em.
 
 Dữ liệu test trong CI hoàn toàn tổng hợp. Không cung cấp dữ liệu thật
 của học viên, thông tin đăng nhập hay khóa bí mật trong artifacts.
+
+
+## Bước tiếp theo: cổng kiểm tra chữ ký (vẫn khóa)
+Có workflow xác minh thủ công tại
+.github/workflows/verify-staging-attestation.yml và script
+scripts/verify-release-attestation.mjs. Không có quyền deploy,
+chỉ chấp nhận GHCR manifest digest bất biến, SLSA provenance
+và CycloneDX SBOM được GitHub CLI xác minh chữ ký thật.
+**CI PR #17 chỉ cung cấp SBOM chưa ký**; quy trình vẫn bị khóa
+cho tới khi có entitlement, image được phát hành và hai attestation.
+Xem docs/RELEASE_ATTESTATION_GATE.md.
