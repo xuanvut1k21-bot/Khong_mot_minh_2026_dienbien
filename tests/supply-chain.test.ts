@@ -36,4 +36,7 @@ test("GitHub workflow actions use complete reviewed 40-character commit SHA",()=
  assert.match(ci,/vuln-type: os/);
  assert.match(ci,/severity: HIGH,CRITICAL/);
  assert.match(ci,/exit-code: "1"/);
+ assert.match(ci,/format: cyclonedx/);
+ assert.match(ci,/scripts\/sbom-evidence\.mjs/);
+ assert.match(ci,/actions\/upload-artifact@[a-f0-9]{40}/);
 });

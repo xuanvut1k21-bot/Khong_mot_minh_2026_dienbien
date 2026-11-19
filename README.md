@@ -130,3 +130,10 @@ Distroless Node.js 22 Debian 13 nonroot pin digest riêng để giảm gói OS.
 Checkout/setup-node và Trivy được pin SHA để tránh tag di động.
 CI chặn CVE OS ở mức HIGH/CRITICAL qua Trivy, không bỏ qua lỗi.
 Chi tiết: `docs/DEPENDENCY_SECURITY.md`.
+
+## SBOM CycloneDX và bằng chứng build
+GitHub Actions xuất SBOM CycloneDX từ image Docker sau khi quét CVE,
+xác nhận định dạng/danh mục thành phần, lập SHA-256, ghi commit và
+image ID cục bộ, rồi lưu tệp trong Actions artifacts 14 ngày.
+**Chưa ký số/attest image hoặc push registry.** Xem
+`docs/SBOM_AND_ATTESTATION.md`.

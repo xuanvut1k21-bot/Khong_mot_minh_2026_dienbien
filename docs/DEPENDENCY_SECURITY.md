@@ -25,8 +25,14 @@
 - CI chạy Trivy với image km2026-staging:ci sau build để kiểm tra CVE
   thuộc gói hệ điều hành (os). HIGH/CRITICAL làm CI lỗi, không bỏ qua
   bản vá chưa sẵn có; các finding phải được xử lý hoặc đánh giá công khai.
-- Vẫn chưa có SBOM và chữ ký image, chưa quét mọi cấu hình container,
-  không phải chứng nhận an toàn sản phẩm.
+- CI xuất SBOM CycloneDX có thông tin các thành phần OS và library từ
+  **image ứng dụng được build**, kiểm tra định dạng và đối chiếu mã SHA-256.
+  Bản SBOM cùng tệp thông tin commit, run ID, Docker image ID được lưu
+  dưới dạng Actions artifact trong 14 ngày. **Chúng chưa được ký số**, 
+  chưa phải chứng thực nguồn gốc theo Sigstore và không khẳng định image
+  đã được phát hành lên registry.
+- Chưa ký hoặc đẩy image, chưa kiểm tra mọi cấu hình container;
+  kiểm thử CI không phải chứng nhận an toàn sản phẩm.
 - Lockfile khóa phiên bản npm, nhưng binary native như sharp và nội dung
   image OS có thể khác theo kiến trúc nền tảng. Build/triển khai cần chốt
   kiến trúc và lưu image digest để hỗ trợ rollback.
