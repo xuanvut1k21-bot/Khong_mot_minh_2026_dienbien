@@ -42,7 +42,7 @@ export async function POST(request:NextRequest,context:Context) {
       [
         "SELECT id,owner_organization_id,created_by,source_type,",
         "public_source_url,approval_status,scan_status,preview_ready,",
-        "preview_object_key,checksum_sha256,original_mime_type",
+        "preview_object_key,checksum_sha256,original_mime_type,preview_type",
         "FROM media_assets WHERE id=$1 FOR UPDATE"
       ].join(" "),[id]
     );
@@ -70,7 +70,12 @@ export async function POST(request:NextRequest,context:Context) {
       } else if (asset.source_type==="upload"){
         if (
           asset.scan_status!=="clean" || asset.preview_ready!==true ||
-          !["image/jpeg","image/png","image/webp"].includes(asset.original_mime_type) ||
+          !(
+            (asset.preview_type==="image" &&
+              ["image/jpeg","image/png","image/webp"].includes(asset.original_mime_type)) ||
+            (asset.preview_type==="pdf_cover" && asset.original_mime_type==="application/pdf") ||
+            (asset.preview_type==="video_poster" && asset.original_mime_type==="video/mp4")
+          ) ||
           !checkedPreviewKey(id,asset.checksum_sha256,asset.preview_object_key)
         ) throw new EditorialError(409,"IMAGE_NOT_SCANNED");
       } else {

@@ -12,7 +12,9 @@ export async function GET(request:NextRequest) {
   try{getMediaStorageConfig();enabled=true;}catch{}
   return NextResponse.json({
     enabled,maxBytes:MAX_IMAGE_UPLOAD_BYTES,
+    pdfEnabled:enabled && process.env.MEDIA_PDF_PREVIEW_ENABLED==="true",
+    videoEnabled:enabled && process.env.MEDIA_VIDEO_POSTER_ENABLED==="true",
     acceptedMimes:["image/jpeg","image/png","image/webp"],
-    warning:"Chỉ xử lý ảnh; tệp phải qua kiểm tra và kiểm duyệt trước khi công bố."
+    warning:"PDF/video chỉ có ảnh bìa xem trước; không phát hoặc tải tệp gốc."
   },{headers:{"Cache-Control":"no-store"}});
 }

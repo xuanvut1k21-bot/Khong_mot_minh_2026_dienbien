@@ -39,7 +39,8 @@ async function claimOne(): Promise<ScanJob | null> {
       [
         "WITH choice AS (",
         "SELECT id FROM media_upload_sessions",
-        "WHERE attempts < 3 AND (",
+        "WHERE attempts < 3",
+        "AND expected_mime_type IN ('image/jpeg','image/png','image/webp') AND (",
         "(state='uploaded' AND expires_at < NOW()-INTERVAL '10 seconds')",
         "OR (state='scanning' AND lease_expires_at < NOW()))",
         "ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1)",

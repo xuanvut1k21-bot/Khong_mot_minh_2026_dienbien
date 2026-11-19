@@ -10,6 +10,7 @@ type MediaRow={
   rightsHolder:string|null;rightsBasis:string|null;rightsEvidenceRef:string|null;
   rejectionReason:string|null;canApprove:boolean;canRevoke:boolean;
   sourceType:"drive"|"upload";scanStatus:string;previewReady:boolean;previewUrl:string|null;
+  previewType:"image"|"pdf_cover"|"video_poster"|null;
 };
 const categories:Record<string,string>={
   brand:"Bộ nhận diện",infographic:"Infographic",video:"Video",
@@ -149,7 +150,7 @@ export default function MediaManager() {
       </button>
     </form>}
     {!units.length && <div className="empty-state">Chưa được cấp quyền đăng ký tư liệu cho đơn vị nào.</div>}
-    <section className="content-section"><h2>Tải ảnh vào vùng cách ly</h2>
+    <section className="content-section"><h2>Tải tư liệu vào vùng cách ly</h2>
       <MediaUploader units={units} onUploaded={async()=>{
         setStatus("pending");setPage(1);await load();
       }}/>
@@ -171,6 +172,8 @@ export default function MediaManager() {
         {item.sourceType==="upload"&&<p><strong>Kiểm tra ảnh:</strong> {item.scanStatus}
           {item.previewReady?" · Bản xem trước đã sẵn sàng":""}</p>}
         {item.driveUrl && <p><a href={item.driveUrl} target="_blank" rel="noopener noreferrer">Kiểm tra tệp nguồn Drive ↗</a></p>}
+        {item.previewUrl && item.previewType!=="image" && 
+          <p>Chỉ có ảnh bìa xem trước, chưa hỗ trợ đọc PDF hoặc phát video.</p>}
         {item.previewUrl&&<p><img src={item.previewUrl} alt={item.title} loading="lazy"
           style={{maxWidth:"100%",maxHeight:250,objectFit:"contain",borderRadius:8}}/></p>}
         {item.rejectionReason && <p><strong>Lý do từ chối:</strong> {item.rejectionReason}</p>}
@@ -191,6 +194,9 @@ export default function MediaManager() {
       <h2>Kiểm duyệt: {selected.title}</h2>
       <p><strong>Đơn vị:</strong> {selected.organization}</p>
       {selected.driveUrl && <p><a href={selected.driveUrl} target="_blank" rel="noopener noreferrer">Mở tệp nguồn để kiểm tra ↗</a></p>}
+      {selected.previewUrl && selected.previewType!=="image" &&
+        <p>Đây chỉ là ảnh bìa đã xử lý, không phải nội dung PDF/video đầy đủ. 
+          Cần kiểm tra quyền và nội dung gốc qua quy trình nội bộ trước khi duyệt.</p>}
       {selected.previewUrl&&<p><img src={selected.previewUrl} alt={selected.title}
         style={{maxWidth:"100%",maxHeight:380,objectFit:"contain"}}/></p>}
       {selected.sourceType==="upload"&&selected.scanStatus!=="clean"&&
