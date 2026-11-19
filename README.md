@@ -77,3 +77,9 @@ trình `training_editor` và `training_approver`, không mặc định cấp cho
 Nhập 9 học liệu và ngân hàng câu hỏi, gửi duyệt độc lập và lưu nhật ký.
 Không nhập sẵn dữ liệu thật hoặc câu hỏi giả. Xem
 [docs/TRAINING_EDITORIAL.md](docs/TRAINING_EDITORIAL.md).
+
+## Khảo sát QR phiên 1 và 9
+Đã có QR tĩnh không chứa dữ liệu người học, phát hành token tương quan
+dùng một lần khi mở biểu mẫu và xác nhận qua webhook HMAC từ provider
+được ủy quyền. Mặc định khóa đến khi xác minh provider thật.
+Chi tiết [docs/TRAINING_SURVEY_QR.md](docs/TRAINING_SURVEY_QR.md).

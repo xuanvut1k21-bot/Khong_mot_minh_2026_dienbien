@@ -19,7 +19,7 @@ export async function GET(request:NextRequest){
       [learner.id]
     );
     return NextResponse.json({
-      registered:true,learnerReference:learner.id,
+      registered:true,
       verifiedSurveys:result.rows.map(x=>x.lesson_number)
     },{headers:{"Cache-Control":"no-store"}});
   }catch{return NextResponse.json({error:"TRAINING_UNAVAILABLE"},{status:503});}
