@@ -148,7 +148,13 @@ async function integration(){
   assert.equal(initial.rows[0].lessons,9,"Expected 9 lesson slots");
 
   await startServer();
-  let response=await get("/api/v1/training/overview");
+  let response=await get("/api/health/live");
+  expectStatus(response,200,"Liveness endpoint");
+  assert.equal((await response.json()).status,"alive");
+  response=await get("/api/health/ready");
+  expectStatus(response,200,"Database readiness endpoint");
+  assert.equal((await response.json()).status,"ready");
+  response=await get("/api/v1/training/overview");
   expectStatus(response,200,"Initial overview");
   let snapshot=await response.json();
   assert.equal(snapshot.examOpen,false);

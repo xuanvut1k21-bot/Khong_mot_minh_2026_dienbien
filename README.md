@@ -101,3 +101,6 @@ không giới hạn tổng số lượt thi qua các phiên. Production chỉ m�
 tạm hết hạn và chính sách xóa học viên không còn hoạt động,
 **không tự chạy và mặc định dry-run**. Xem
 [docs/TRAINING_OPERATIONS.md](docs/TRAINING_OPERATIONS.md).
+
+## Chuẩn bị staging (không tự triển khai)
+Chạy `npm run staging:test` để kiểm thử quy tắc cấu hình. `npm run staging:check` chỉ báo cáo điều kiện và `npm run staging:check -- --check-db` kiểm tra PostgreSQL read-only. Xem `docs/STAGING_DEPLOYMENT.md`. Chức năng học viên vẫn tắt.
