@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { sections, official } from "@/lib/site";
+import { PublishedActivities } from "@/components/PublishedActivities";
 
 export default function HomePage() {
   return (
@@ -28,7 +29,7 @@ export default function HomePage() {
       </section>
       <section className="container main-section">
         <div className="section-heading"><div><span className="section-kicker">HOẠT ĐỘNG TẠI ĐIỆN BIÊN</span><h2>Tin và hoạt động hưởng ứng</h2></div><Link href="/hoat-dong">Xem các hoạt động →</Link></div>
-        <div className="empty-state">Chưa có hoạt động thực tế đã được kiểm duyệt trong bản nền tảng. Khi hoàn thiện cơ sở dữ liệu, phần này chỉ lấy nội dung đã công bố.</div>
+        <PublishedActivities featured />
       </section>
       <section className="container main-section split-callout">
         <div><span className="section-kicker">KỸ NĂNG AN TOÀN MẠNG</span><h2>Không một mình trước các nguy cơ trực tuyến</h2><p>Nhận diện các hình thức tiếp xúc, nội dung, hành vi, lừa đảo và giả mạo bằng AI.</p><Link className="button button-blue" href="/an-toan-mang">Góc an toàn mạng</Link></div>

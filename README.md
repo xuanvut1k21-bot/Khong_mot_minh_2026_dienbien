@@ -36,3 +36,7 @@ Xanh dương #2B00D0, cam #FD0100, trắng ngà #E8F2F7. Không dùng vàng làm
 Đây là giai đoạn 1: giao diện Next.js có các đường dẫn thật và chức năng cục bộ được ghi nhãn rõ ràng. Backend PostgreSQL, API có phân quyền, quét tệp, kiểm duyệt, ngân hàng câu hỏi và hệ thống hỗ trợ bảo mật sẽ triển khai sau, **không được ngầm coi các đoạn mã trong hội thoại là mã đã có trong repository**.
 
 Tuyệt đối không nhập dữ liệu học sinh hoặc hồ sơ nhạy cảm vào bản thử. Không đưa thông tin bí mật vào repository hay commit.
+
+## Cơ sở dữ liệu công khai
+
+Đã có API chỉ đọc cho Hoạt động và Thư viện, chưa có API quản trị ghi dữ liệu. Hướng dẫn PostgreSQL: [docs/PUBLIC_CONTENT.md](docs/PUBLIC_CONTENT.md).

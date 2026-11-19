@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { sections, official, risks } from "@/lib/site";
 import { AvatarFrame } from "@/components/AvatarFrame";
 import { QuizPractice } from "@/components/QuizPractice";
+import { PublishedActivities } from "@/components/PublishedActivities";
+import { ApprovedMedia } from "@/components/ApprovedMedia";
 
 export const dynamicParams = false;
 export function generateStaticParams() {
@@ -42,7 +44,8 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
       </>}
       {section==="hoat-dong" && <>
         <h2>Hoạt động hưởng ứng tại Điện Biên</h2>
-        <div className="empty-state">Chưa có sự kiện được nhập và phê duyệt trong cơ sở dữ liệu. Trang không tạo lịch, đơn vị hoặc số lượt tham dự giả. Quy trình công bố: cán bộ nhập → gửi duyệt → phê duyệt → công bố → xác minh kết quả.</div>
+        <PublishedActivities />
+        <div className="notice">Chỉ hiển thị hoạt động đã công bố. Số liệu kết quả phải được xác minh trước khi hiển thị.</div>
       </>}
       {section==="dao-tao" && <>
         <h2>Chương trình đào tạo giảng viên nguồn</h2>
@@ -53,6 +56,7 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
       {section==="thu-vien" && <>
         <h2>Kho tài liệu truyền thông</h2>
         <div className="content-grid">{["Bộ nhận diện","Infographic và poster","Video truyền thông","Ảnh hoạt động","Cẩm nang và học liệu","Đại sứ chiến dịch"].map(t=><div className="info-card" key={t}><h3>{t}</h3><p>Tài nguyên sẽ được cán bộ lựa chọn, kiểm tra quyền sử dụng và phê duyệt trước khi phát hành.</p></div>)}</div>
+        <ApprovedMedia />
         <p><External href={official.mediaFolder}>Kho tư liệu nguồn của chiến dịch</External></p>
         <div className="notice">Liên kết kho nguồn có thể yêu cầu quyền Drive. Website không tự động sao chép hoặc đồng bộ tất cả tệp từ Drive.</div>
       </>}
