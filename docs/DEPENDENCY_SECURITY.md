@@ -36,3 +36,10 @@
    xác nhận; lưu log kiểm tra và phương án rollback.
 5. Không điền thông tin riêng tư hoặc secrets vào npmrc, package.json,
    GitHub PR hoặc image.
+
+## Vá lỗi sharp 0.35.5
+CI đã tìm thấy lỗ hổng severity high ở sharp 0.34.x/liên quan
+libvips, libheif và librsvg. Nâng sharp lên 0.35.5 và cập nhật lockfile.
+Vì cập nhật qua ranh giới minor có thay đổi API/hành vi, thêm smoke
+test xử lý PNG thành WebP bằng các tùy chọn dùng trong worker.
+Điều này không thay thế kiểm thử các tệp thực tế hay fuzz test.

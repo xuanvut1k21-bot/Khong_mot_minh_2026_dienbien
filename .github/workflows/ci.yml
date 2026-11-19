@@ -35,6 +35,7 @@ jobs:
       - name: Audit production dependency advisories
         run: npm audit --omit=dev --audit-level=high --no-fund
       - run: npm run typecheck
+      - run: npm run media:compat
       - run: npm run training:unit
       - run: npm run staging:test
       - run: npm run build

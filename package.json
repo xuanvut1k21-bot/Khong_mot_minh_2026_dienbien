@@ -14,7 +14,8 @@
     "training:maintenance": "tsx scripts/training-maintenance.ts",
     "training:maintenance-test": "tsx tests/training-maintenance.integration.ts",
     "staging:test": "tsx --test tests/staging-readiness.test.ts",
-    "staging:check": "tsx scripts/staging-check.ts"
+    "staging:check": "tsx scripts/staging-check.ts",
+    "media:compat": "tsx --test tests/sharp-compat.test.ts"
   },
   "dependencies": {
     "next": "^16.0.0",
