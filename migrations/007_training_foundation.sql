@@ -13,8 +13,8 @@ CREATE TABLE training_lessons (
   CHECK (
     status <> 'published' OR
     (title IS NOT NULL AND length(trim(title)) >= 3 AND
-     approved_material_url ~ '^https://drive[.]google[.]com/file/d/[A-Za-z0-9_-]{15,128}/view/?
-     AND published_at IS NOT NULL)
+     approved_material_url ~ '^https://drive[.]google[.]com/file/d/[A-Za-z0-9_-]{15,128}/view/?$'
+     AND approved_by IS NOT NULL AND published_at IS NOT NULL)
   )
 );
 -- Nine *unpublished slots*, not nine fabricated lessons.
