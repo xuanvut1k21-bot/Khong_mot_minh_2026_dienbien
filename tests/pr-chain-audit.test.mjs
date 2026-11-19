@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {auditStack} from "../lib/pr-chain-audit.mjs";
+import {auditStack,validMainRuleset} from "../lib/pr-chain-audit.mjs";
 const sha=n=>Number(n).toString(16).padStart(40,"0");
 function fixture(){
  const pulls=[1,2,3].map(n=>({
@@ -108,4 +108,34 @@ test("merged prefix is recognized but next PR must retarget main",()=>{
 test("merging later PR before predecessor blocks",()=>{
  const f=fixture();f.pulls[2].state="closed";f.pulls[2].merged_at="2026-11-20T12:00:00Z";
  assert.ok(auditStack(f).blockers.some(x=>x.id==="merge_order_3"));
+});
+
+function ruleset(){
+ return {name:"Protect main",target:"branch",enforcement:"active",source_type:"Repository",
+  conditions:{ref_name:{include:["~DEFAULT_BRANCH"],exclude:[]}},
+  bypass_actors:[],current_user_can_bypass:"never",
+  rules:[{type:"deletion"},{type:"non_fast_forward"},
+   {type:"pull_request",parameters:{required_approving_review_count:1,dismiss_stale_reviews_on_push:true}},
+   {type:"required_status_checks",parameters:{strict_required_status_checks_policy:true,
+    required_status_checks:[{context:"build",integration_id:15368}]}}]};
+}
+test("actual default branch ruleset is accepted without classic protection",()=>{
+ const f=fixture();delete f.protection;f.mainRuleset=ruleset();
+ assert.equal(validMainRuleset(f.mainRuleset),true);
+ assert.equal(auditStack(f).ready,true);
+});
+test("missing review or strict CI in ruleset fails closed",()=>{
+ const f=fixture();delete f.protection;f.mainRuleset=ruleset();
+ f.mainRuleset.rules.find(x=>x.type==="pull_request").parameters.required_approving_review_count=0;
+ assert.ok(auditStack(f).blockers.some(x=>x.id==="main_ruleset_incomplete"));
+ f.mainRuleset=ruleset();
+ f.mainRuleset.rules.find(x=>x.type==="required_status_checks").parameters.strict_required_status_checks_policy=false;
+ assert.equal(validMainRuleset(f.mainRuleset),false);
+});
+test("inactive or bypassable ruleset fails",()=>{
+ const f=fixture();delete f.protection;f.mainRuleset=ruleset();
+ f.mainRuleset.bypass_actors=[{actor_id:1}];
+ assert.equal(validMainRuleset(f.mainRuleset),false);
+ f.mainRuleset=ruleset();f.mainRuleset.enforcement="disabled";
+ assert.equal(validMainRuleset(f.mainRuleset),false);
 });
