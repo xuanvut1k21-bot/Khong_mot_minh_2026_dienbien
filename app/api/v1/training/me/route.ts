@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabasePool } from "@/lib/server/db";
 import {
-  trainingRegistrationEnabled, trainingOriginValid,
+  trainingOriginValid,
   trainingCookieName,trainingSecureCookies,getTrainingLearner
 } from "@/lib/server/training-security";
 
@@ -27,8 +27,8 @@ export async function GET(request:NextRequest){
 
 // Learner can withdraw their own data and attempts. No secret tokens in response/logs.
 export async function DELETE(request:NextRequest){
-  if(!trainingRegistrationEnabled())
-    return NextResponse.json({error:"REGISTRATION_CLOSED"},{status:503});
+  if(!process.env.DATABASE_URL)
+    return NextResponse.json({error:"TRAINING_UNAVAILABLE"},{status:503});
   if(!trainingOriginValid(request))
     return NextResponse.json({error:"INVALID_ORIGIN"},{status:403});
   const learner=await getTrainingLearner(request);

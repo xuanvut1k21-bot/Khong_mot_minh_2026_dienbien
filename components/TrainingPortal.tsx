@@ -204,7 +204,9 @@ export function TrainingPortal(){
       </fieldset>)}
       <button className="button button-blue" disabled={busy||remaining===0}
         onClick={()=>void submit()}>Nộp bài</button>
-      {remaining===0&&<p>Hết thời gian. Bắt đầu lại để nhận đề khác.</p>}
+      {remaining===0&&<><p>Hết thời gian. Bạn có thể bắt đầu lượt mới.</p>
+        <button className="button button-outline" disabled={busy}
+          onClick={()=>void start()}>Bắt đầu lượt mới</button></>}
     </section>}
 
     {result&&<section className="demo-panel" role="status" aria-live="polite">

@@ -32,9 +32,12 @@ export function trainingSecureCookies():boolean {
   return process.env.APP_BASE_URL?.startsWith("https://")===true;
 }
 export function trainingOriginValid(request:NextRequest):boolean {
-  if(!trainingRegistrationEnabled())return false;
   try{
-    const origin=new URL(process.env.APP_BASE_URL!).origin;
+    const site=new URL(process.env.APP_BASE_URL??"");
+    if(site.protocol!=="https:" &&
+      !(process.env.NODE_ENV!=="production" && site.protocol==="http:" &&
+        site.hostname==="localhost"))return false;
+    const origin=site.origin;
     return request.headers.get("origin")===origin &&
       request.nextUrl.origin===origin;
   }catch{return false;}
@@ -49,7 +52,8 @@ export function tokenDigest(raw:string):string {
 export async function getTrainingLearner(
   request:NextRequest
 ):Promise<{id:string}|null>{
-  if(!trainingRegistrationEnabled())return null;
+  // Existing learners may still access/delete their records after enrollment closes.
+  if(!process.env.DATABASE_URL)return null;
   const raw=request.cookies.get(trainingCookieName())?.value;
   if(!raw||!/^[A-Za-z0-9_-]{43}$/.test(raw))return null;
   try{

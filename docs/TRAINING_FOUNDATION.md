@@ -67,3 +67,8 @@ POST /api/v1/training/attempts/:id: nộp đáp án, chấm trên máy chủ.
 - Cần bổ sung bảo vệ chống spam đăng ký và truy cập lặp lại trước khi bật.
 - CI chỉ chạy TypeScript, Next.js build, unit tests và PostgreSQL constraints
   với dữ liệu tổng hợp được ROLLBACK, không chứng minh an toàn production.
+
+## Ghi chú bảo vệ người học và ngân hàng câu hỏi
+Người đã đăng ký vẫn có thể tự xóa dữ liệu khi khóa đăng ký tạm đóng,
+nếu website và cơ sở dữ liệu còn hoạt động. Chỉ người khác người biên soạn
+mới được đứng tên duyệt câu hỏi trong CSDL; cả 90 câu cần duyệt trước khi mở thi.

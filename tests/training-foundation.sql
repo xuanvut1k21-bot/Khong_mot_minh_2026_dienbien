@@ -2,7 +2,7 @@
 BEGIN;
 DO $$
 DECLARE
-  v_admin UUID;v_learner UUID;v_attempt UUID;v_q UUID;
+  v_admin UUID;v_author UUID;v_learner UUID;v_attempt UUID;v_q UUID;
   v_count INTEGER;v_session UUID;
 BEGIN
   SELECT COUNT(*) INTO v_count FROM training_lessons;
@@ -17,6 +17,9 @@ BEGIN
   INSERT INTO admin_users(oidc_issuer,oidc_subject,enabled)
     VALUES('https://id.example.test','synthetic-training-reviewer',TRUE)
     RETURNING id INTO v_admin;
+  INSERT INTO admin_users(oidc_issuer,oidc_subject,enabled)
+    VALUES('https://id.example.test','synthetic-training-author',TRUE)
+    RETURNING id INTO v_author;
   UPDATE training_lessons SET
     title='Synthetic training material '||lesson_number,
     approved_material_url='https://drive.google.com/file/d/123456789012345/view',
@@ -48,9 +51,9 @@ BEGIN
   IF v_count<>2 THEN RAISE EXCEPTION 'Survey gate is not fully satisfied'; END IF;
 
   INSERT INTO training_questions(question_text,option_a,option_b,option_c,option_d,
-    correct_index,approval_status,approved_by,approved_at)
+    correct_index,approval_status,created_by,approved_by,approved_at)
     SELECT 'Synthetic question number '||g,'Choice A','Choice B','Choice C','Choice D',
-      (g%4)+1,'approved',v_admin,NOW()
+      (g%4)+1,'approved',v_author,v_admin,NOW()
     FROM generate_series(1,90) AS g;
 
   SELECT COUNT(*) INTO v_count FROM training_questions
