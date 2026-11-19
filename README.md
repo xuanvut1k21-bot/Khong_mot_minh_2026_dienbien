@@ -104,3 +104,14 @@ tạm hết hạn và chính sách xóa học viên không còn hoạt động,
 
 ## Chuẩn bị staging (không tự triển khai)
 Chạy `npm run staging:test` để kiểm thử quy tắc cấu hình. `npm run staging:check` chỉ báo cáo điều kiện và `npm run staging:check -- --check-db` kiểm tra PostgreSQL read-only. Xem `docs/STAGING_DEPLOYMENT.md`. Chức năng học viên vẫn tắt.
+
+## Gói container staging chưa triển khai
+
+Bổ sung Dockerfile, compose.staging.yml, .dockerignore và Next.js
+standalone output. Image chạy không có quyền root, không chứa .env
+hoặc secrets, không dùng PostgreSQL cài sẵn. Compose buộc
+có file .env.staging chỉ trên máy quản trị (được .gitignore bỏ qua),
+bind cổng về 127.0.0.1:3000, khóa các chức năng nhạy cảm và dùng
+giới hạn tài nguyên. Chỉ chạy sau khi đã có HTTPS proxy và PostgreSQL
+staging riêng. CI tự build, chạy thử và xóa container thử;
+không đẩy lên registry hay đưa lên máy chủ. Xem tài liệu staging.
