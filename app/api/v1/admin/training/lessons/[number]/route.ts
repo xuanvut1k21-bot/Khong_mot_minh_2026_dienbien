@@ -37,6 +37,8 @@ export async function POST(request:NextRequest,ctx:Context){
     let after:string;
     if(data.action==="save"){
       if(before!=="draft")throw new EditorialError(409,"NOT_EDITABLE");
+      if(lesson.editor_id && lesson.editor_id!==actor.id)
+        throw new EditorialError(409,"DRAFT_OWNERSHIP_REQUIRED");
       const url=safeOfficialDriveUrl(data.content.materialUrl);
       if(!url)throw new EditorialError(400,"INVALID_SOURCE_DRIVE_URL");
       await db.query([

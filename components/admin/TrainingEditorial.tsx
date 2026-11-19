@@ -98,18 +98,20 @@ export default function TrainingEditorial(){
   if(lessonNumber===null)return;
   if(action==="withdraw"&&!window.confirm("Thu hồi học liệu đã công bố? Người học sẽ không thấy phiên này."))return;
   const content={title:lessonTitle.trim(),materialUrl:lessonUrl.trim()};
-  await perform(()=>send(
-   "/api/v1/admin/training/lessons/"+lessonNumber,
-   action==="save"?{action,content}:{action}
-  ),"Đã cập nhật trạng thái phiên học.");
+  await perform(async()=>{
+   await send("/api/v1/admin/training/lessons/"+lessonNumber,
+    action==="save"?{action,content}:{action});
+   setLessonNumber(null);
+  },"Đã cập nhật trạng thái phiên học.");
  }
  async function questionAction(action:"save"|"submit"|"return"|"approve"|"archive"){
   if(!selectedQuestion)return;
   if(action==="archive"&&!window.confirm("Lưu trữ câu hỏi đã duyệt? Thi mới sẽ không dùng câu này."))return;
-  await perform(()=>send(
-   "/api/v1/admin/training/questions/"+selectedQuestion.id,
-   action==="save"?{action,content:qform}:{action}
-  ),"Đã cập nhật câu hỏi.");
+  await perform(async()=>{
+   await send("/api/v1/admin/training/questions/"+selectedQuestion.id,
+    action==="save"?{action,content:qform}:{action});
+   setSelectedQuestion(null);
+  },"Đã cập nhật câu hỏi.");
  }
  async function createQuestion(e:React.FormEvent){
   e.preventDefault();

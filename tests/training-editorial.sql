@@ -2,7 +2,7 @@
 BEGIN;
 DO $$
 DECLARE
- editor_id UUID; reviewer_id UUID; tech_id UUID; question_id UUID;
+ editor_id UUID; reviewer_id UUID; tech_id UUID; v_question_id UUID;
  can_edit BOOLEAN; can_approve BOOLEAN; n INTEGER;
 BEGIN
  INSERT INTO admin_users(oidc_issuer,oidc_subject,enabled)
@@ -61,22 +61,22 @@ BEGIN
   option_d,correct_index,created_by,source_reference)
  VALUES('Synthetic question on internet safety','A','B','C','D',2,editor_id,
   'https://drive.google.com/file/d/123456789012345/view')
- RETURNING id INTO question_id;
- UPDATE training_questions SET approval_status='pending' WHERE id=question_id;
+ RETURNING id INTO v_question_id;
+ UPDATE training_questions SET approval_status='pending' WHERE id=v_question_id;
  BEGIN
   UPDATE training_questions SET approval_status='approved',
-   approved_by=editor_id,approved_at=NOW() WHERE id=question_id;
+   approved_by=editor_id,approved_at=NOW() WHERE id=v_question_id;
   RAISE EXCEPTION 'Self approved question accepted';
  EXCEPTION WHEN check_violation THEN NULL;
  END;
  UPDATE training_questions SET approval_status='approved',
-  approved_by=reviewer_id,approved_at=NOW() WHERE id=question_id;
+  approved_by=reviewer_id,approved_at=NOW() WHERE id=v_question_id;
  SELECT COUNT(*) INTO n FROM training_questions
-  WHERE id=question_id AND approval_status='approved';
+  WHERE id=v_question_id AND approval_status='approved';
  IF n<>1 THEN RAISE EXCEPTION 'Question approval failed'; END IF;
- UPDATE training_questions SET approval_status='archived' WHERE id=question_id;
+ UPDATE training_questions SET approval_status='archived' WHERE id=v_question_id;
  SELECT COUNT(*) INTO n FROM training_questions
-  WHERE id=question_id AND approval_status='approved';
+  WHERE id=v_question_id AND approval_status='approved';
  IF n<>0 THEN RAISE EXCEPTION 'Archived question still in approved bank'; END IF;
 
  BEGIN
@@ -91,13 +91,13 @@ BEGIN
  INSERT INTO training_review_events(actor_id,lesson_number,action,from_status,to_status)
   VALUES(editor_id,1,'save','draft','draft');
  INSERT INTO training_review_events(actor_id,question_id,action,from_status,to_status)
-  VALUES(reviewer_id,question_id,'archive','approved','archived');
+  VALUES(reviewer_id,v_question_id,'archive','approved','archived');
  SELECT COUNT(*) INTO n FROM training_review_events
-  WHERE question_id=question_id AND action='archive';
+  WHERE question_id=v_question_id AND action='archive';
  IF n<>1 THEN RAISE EXCEPTION 'Review audit missing'; END IF;
  BEGIN
   INSERT INTO training_review_events(actor_id,lesson_number,question_id,action,to_status)
-   VALUES(editor_id,1,question_id,'save','draft');
+   VALUES(editor_id,1,v_question_id,'save','draft');
   RAISE EXCEPTION 'Ambiguous audit event accepted';
  EXCEPTION WHEN check_violation THEN NULL;
  END;
