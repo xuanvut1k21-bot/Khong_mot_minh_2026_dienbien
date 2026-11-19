@@ -331,6 +331,7 @@ async function cleanup(){
   if(approverId)await db.query("DELETE FROM admin_users WHERE id=$1",[approverId]);
 }
 
+async function main(){
 try{
   await integration();
 }catch(error){
@@ -350,3 +351,9 @@ try{
     if(dev.exitCode===null)dev.kill("SIGKILL");
   }
 }
+
+}
+void main().catch(error=>{
+  console.error("Uncaught training journey test failure:",error);
+  process.exitCode=1;
+});
