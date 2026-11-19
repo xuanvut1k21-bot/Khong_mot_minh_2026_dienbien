@@ -42,7 +42,7 @@ test("draft and no approval block",()=>{
  const f=fixture();f.pulls[1].draft=true;f.reviewsByPr[1]=[];
  const r=auditStack(f);assert.equal(r.ready,false);
  assert.ok(r.blockers.some(x=>x.id==="draft_2"));
- assert.ok(r.blockers.some(x=>x.id==="review_missing_2"));
+ assert.ok(r.blockers.some(x=>x.id==="review_missing_1"));
 });
 test("branch protection must enforce exact check and stale dismissal",()=>{
  const f=fixture();f.main.protected=false;
