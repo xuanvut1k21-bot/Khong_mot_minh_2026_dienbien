@@ -37,6 +37,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run media:compat
       - run: npm run supply-chain:test
+      - run: node --test tests/sbom-evidence.test.mjs
       - run: npm run training:unit
       - run: npm run staging:test
       - run: npm run build
@@ -101,6 +102,29 @@ jobs:
           exit-code: "1"
           format: table
           cache: "false"
+      - name: Prepare SBOM artifact directory
+        run: mkdir -p artifacts
+      - name: Export complete CycloneDX inventory of built image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: km2026-staging:ci
+          scan-type: image
+          scanners: vuln
+          vuln-type: os,library
+          format: cyclonedx
+          output: artifacts/km2026-image.cdx.json
+          cache: "false"
+      - name: Validate SBOM and record unsigned build identity
+        run: node scripts/sbom-evidence.mjs artifacts/km2026-image.cdx.json
+      - name: Upload validated SBOM and unsigned build evidence (no registry)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: km2026-container-sbom
+          path: |
+            artifacts/km2026-image.cdx.json
+            artifacts/km2026-build-evidence.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Smoke-test isolated production-mode container without secrets
         run: |
           docker run -d --rm --name km2026-ci \
