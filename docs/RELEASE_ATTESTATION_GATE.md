@@ -77,3 +77,33 @@ parser**, không phải bằng chứng chữ ký.
 Tài liệu:
 - https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations
 - https://cli.github.com/manual/gh_attestation_verify
+
+## Kiểm toán người phê duyệt và phiên bản GitHub CLI
+
+Trước khi gọi lệnh xác minh chữ ký, workflow phải chạy
+scripts/check-release-governance.mjs. Script chỉ đọc GitHub API,
+mặc định RELEASE_BLOCKED nếu không đọc được cấu hình hoặc chưa đạt:
+- GitHub Environment staging có ít nhất một required reviewer.
+- prevent_self_review=true: người khởi chạy không được tự phê duyệt.
+- Staging chỉ chấp nhận protected branches.
+- Nhánh main có protection, quy tắc duyệt pull request (ít nhất
+  một người phê duyệt) và required status checks.
+- Phiên bản GitHub CLI tối thiểu 2.97.0.
+
+GITHUB_TOKEN do GitHub Actions cấp có thể không đủ quyền đọc cấu hình
+GitHub Environment/branch rules. Quản trị viên cần cấp GitHub App
+installation token hoặc fine-grained token chỉ có quyền
+Administration: read cho repository, cung cấp qua Environment secret
+STAGING_GOVERNANCE_AUDIT_TOKEN. Không cấp quyền ghi, không lưu token
+trong repo. Script không in dữ liệu reviewer hoặc token.
+
+CVE-2026-64655 ảnh hưởng gh attestation verify dùng signer-workflow
+trước 2.97.0, nên bắt buộc kiểm tra phiên bản thực tế trên runner
+ngay trước khi xác minh, không dựa vào giả định phiên bản runner.
+Nguồn: https://github.com/advisories/GHSA-mm27-mwq9-fr5g
+
+Quy tắc required status checks cho biết kiểm tra CI bắt buộc trong
+GitHub, không chứng minh nội dung toàn bộ pipeline đã được duyệt.
+Nếu main chưa có governance phù hợp, workflow không được thành công
+dù chữ ký có tồn tại. Chưa xác nhận Environment staging, audit token,
+Enterprise entitlement hay image ký thật: trạng thái vẫn bị khóa.
