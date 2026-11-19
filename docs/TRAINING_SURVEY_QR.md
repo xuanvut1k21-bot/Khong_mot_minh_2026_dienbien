@@ -72,3 +72,5 @@ Không đưa URL khảo sát chưa xác minh vào kho mã.
   phục hồi phù hợp trước khi mở rộng phạm vi triển khai.
 - CI xác nhận TypeScript, Next.js build và ràng buộc SQL bằng dữ liệu
   tổng hợp được ROLLBACK, **không xác minh provider đã hoạt động**.
+
+Only survey confirmation rows attached to a consumed correlation handoff count toward training and exam eligibility. Any earlier uncorrelated confirmations are not automatically trusted.

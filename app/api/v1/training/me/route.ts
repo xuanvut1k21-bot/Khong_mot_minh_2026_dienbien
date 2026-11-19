@@ -15,7 +15,10 @@ export async function GET(request:NextRequest){
   });
   try{
     const result=await getDatabasePool().query(
-      "SELECT lesson_number FROM training_verified_surveys WHERE learner_id=$1 ORDER BY lesson_number",
+      "SELECT v.lesson_number FROM training_verified_surveys v",
+      "JOIN training_survey_handoffs h ON h.id=v.handoff_id",
+      "WHERE v.learner_id=$1 AND h.consumed_at IS NOT NULL",
+      "ORDER BY v.lesson_number",
       [learner.id]
     );
     return NextResponse.json({

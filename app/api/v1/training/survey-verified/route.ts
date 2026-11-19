@@ -15,6 +15,24 @@ const schema=z.object({
 const fail=(error:string,status:number)=>NextResponse.json({error},{status,
   headers:{"Cache-Control":"no-store"}});
 
+async function readSignedBody(request:NextRequest):Promise<string|null>{
+  const reader=request.body?.getReader();
+  if(!reader)return null;
+  const chunks:Uint8Array[]=[];
+  let bytes=0;
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      bytes+=value.byteLength;
+      if(bytes>4096){await reader.cancel();return null;}
+      chunks.push(value);
+    }
+    return Buffer.concat(chunks).toString("utf8");
+  }catch{return null;}
+  finally{reader.releaseLock();}
+}
+
 export async function POST(request:NextRequest){
   if(process.env.TRAINING_SURVEY_WEBHOOK_ENABLED!=="true")
     return fail("SURVEY_VERIFICATION_DISABLED",503);
@@ -22,8 +40,8 @@ export async function POST(request:NextRequest){
     return fail("INVALID_CONTENT_TYPE",415);
   const length=Number(request.headers.get("content-length"));
   if(Number.isFinite(length)&&length>4096)return fail("PAYLOAD_TOO_LARGE",413);
-  const raw=await request.text();
-  if(Buffer.byteLength(raw,"utf8")>4096)return fail("PAYLOAD_TOO_LARGE",413);
+  const raw=await readSignedBody(request);
+  if(raw===null)return fail("PAYLOAD_TOO_LARGE",413);
   if(!verifySurveySignature(
     request.headers.get("x-km-timestamp")??"",
     raw,request.headers.get("x-km-signature")??""

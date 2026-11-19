@@ -42,7 +42,9 @@ export async function GET(request:NextRequest){
     let surveys:number[]=[];
     if(learner){
       const result=await getDatabasePool().query(
-        "SELECT lesson_number FROM training_verified_surveys WHERE learner_id=$1",
+        "SELECT v.lesson_number FROM training_verified_surveys v",
+        "JOIN training_survey_handoffs h ON h.id=v.handoff_id",
+        "WHERE v.learner_id=$1 AND h.consumed_at IS NOT NULL",
         [learner.id]
       );
       surveys=result.rows.map(x=>Number(x.lesson_number));
