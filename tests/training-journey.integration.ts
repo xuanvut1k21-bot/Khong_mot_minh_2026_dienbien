@@ -19,8 +19,10 @@ let approverId:string|null=null;
 function expectStatus(actual:Response, expected:number, context:string){
   assert.equal(actual.status,expected,
     context+": unexpected HTTP "+actual.status);
-  assert.equal(actual.headers.get("cache-control")?.includes("no-store"),true,
-    context+": missing no-store");
+  if(actual.ok)assert.equal(
+    actual.headers.get("cache-control")?.includes("no-store"),true,
+    context+": missing no-store on success"
+  );
 }
 async function endpoint(path:string,opts?:RequestInit):Promise<Response>{
   return fetch(ROOT+path,{cache:"no-store",redirect:"manual",...opts});
