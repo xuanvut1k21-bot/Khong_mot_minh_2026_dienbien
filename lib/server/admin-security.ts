@@ -17,7 +17,6 @@ export type OidcConfiguration = {
   authorizeUrl: string;
   tokenUrl: string;
   jwksUrl: string;
-  requiredAcr: string;
   appOrigin: string;
   redirectUri: string;
   secret: Uint8Array;
@@ -40,7 +39,7 @@ export function getOidcConfiguration(): OidcConfiguration {
     "APP_BASE_URL", "OIDC_ISSUER", "OIDC_CLIENT_ID",
     "OIDC_CLIENT_SECRET", "OIDC_AUTHORIZATION_ENDPOINT",
     "OIDC_TOKEN_ENDPOINT", "OIDC_JWKS_URI",
-    "OIDC_REQUIRED_ACR", "ADMIN_STATE_KEY_BASE64"
+    "ADMIN_STATE_KEY_BASE64"
   ] as const;
   for (const name of names) {
     if (!process.env[name]) throw new Error("AUTH_NOT_CONFIGURED");
@@ -55,18 +54,17 @@ export function getOidcConfiguration(): OidcConfiguration {
   const authorize = secureUrl(process.env.OIDC_AUTHORIZATION_ENDPOINT!);
   const token = secureUrl(process.env.OIDC_TOKEN_ENDPOINT!);
   const jwks = secureUrl(process.env.OIDC_JWKS_URI!);
-  if (issuer.pathname.endsWith("/") && issuer.pathname !== "/")
-    throw new Error("ISSUER_TRAILING_SLASH_NOT_ALLOWED");
+  if (issuer.origin !== "https://accounts.google.com" || issuer.pathname !== "/")
+    throw new Error("OIDC_ISSUER_NOT_ALLOWED");
   const decoded = Buffer.from(process.env.ADMIN_STATE_KEY_BASE64!, "base64");
   if (decoded.length !== 32) throw new Error("AUTH_KEY_INVALID");
   return {
-    issuer: issuer.toString().replace(/\/$/, issuer.pathname === "/" ? "/" : ""),
+    issuer: "https://accounts.google.com",
     clientId: process.env.OIDC_CLIENT_ID!,
     clientSecret: process.env.OIDC_CLIENT_SECRET!,
     authorizeUrl: authorize.toString(),
     tokenUrl: token.toString(),
     jwksUrl: jwks.toString(),
-    requiredAcr: process.env.OIDC_REQUIRED_ACR!,
     appOrigin: app.origin,
     redirectUri: new URL("/api/v1/admin/auth/callback", app.origin).toString(),
     secret: new Uint8Array(decoded)
@@ -139,17 +137,20 @@ export async function verifyOidcIdToken(
   const { payload } = await jwtVerify(token, keySet, {
     issuer: config.issuer,
     audience: config.clientId,
-    algorithms: ["RS256", "PS256", "ES256"],
+    algorithms: ["RS256"],
     clockTolerance: 30
   });
   if (
     typeof payload.sub !== "string" || !payload.sub ||
     payload.nonce !== expectedNonce ||
-    payload.acr !== config.requiredAcr ||
+    typeof payload.email !== "string" ||
+    payload.email.length > 320 ||
+    payload.email_verified !== true ||
     (Array.isArray(payload.aud) && payload.aud.length > 1 &&
       payload.azp !== config.clientId)
   ) throw new Error("OIDC_CLAIM_VALIDATION_FAILED");
-  // The IdP configuration must define requiredAcr as an MFA-capable class.
+  // The stable Google subject is matched to a pre-provisioned admin_users row.
+  // Email is verified as an account attribute, never used as the authorization key.
   return { subject: payload.sub };
 }
 
