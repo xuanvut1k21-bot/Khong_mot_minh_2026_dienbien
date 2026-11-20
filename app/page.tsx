@@ -1,4 +1,5 @@
 import Link from "next/link";
+export const dynamic = "force-dynamic";
 import { sections, official } from "@/lib/site";
 import { PublishedActivities } from "@/components/PublishedActivities";
 

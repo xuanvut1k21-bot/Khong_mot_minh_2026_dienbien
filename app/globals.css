@@ -57,3 +57,5 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 
 .field textarea{display:block;width:100%;margin-top:6px;padding:11px;border:1px solid #b3bdd5;border-radius:9px;background:#fff;color:var(--ink)}
 .field-unit{display:block;padding:10px;margin-top:5px;color:var(--ink);font-weight:700;background:#f1f2ff;border-radius:9px}
+
+.field input[type="checkbox"]{display:inline-block;width:auto;margin:0 .5rem 0 0;vertical-align:middle;accent-color:var(--blue)}
