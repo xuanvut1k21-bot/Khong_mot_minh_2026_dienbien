@@ -43,5 +43,5 @@ Tuyệt đối không nhập dữ liệu học sinh hoặc hồ sơ nhạy cảm
 
 ## Đăng nhập quản trị (đang cấu hình)
 
-Đã có mã khung OIDC + PKCE/MFA ACR và phân quyền scoped RBAC, mặc định khóa.
+Đã có mã khung Google OIDC + PKCE và phân quyền scoped RBAC, mặc định khóa. Google OIDC không được coi là bằng chứng MFA theo từng phiên; xem [docs/ADMIN_AUTH.md](docs/ADMIN_AUTH.md).
 Xem [docs/ADMIN_AUTH.md](docs/ADMIN_AUTH.md). Không có tài khoản/mật khẩu mẫu.
