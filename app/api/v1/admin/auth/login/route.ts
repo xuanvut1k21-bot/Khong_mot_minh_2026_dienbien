@@ -26,12 +26,11 @@ export async function GET(request: NextRequest) {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", config.clientId);
   url.searchParams.set("redirect_uri", config.redirectUri);
-  url.searchParams.set("scope", "openid");
+  url.searchParams.set("scope", "openid email profile");
   url.searchParams.set("state", state);
   url.searchParams.set("nonce", nonce);
   url.searchParams.set("code_challenge", pkceChallenge(verifier));
   url.searchParams.set("code_challenge_method", "S256");
-  url.searchParams.set("acr_values", config.requiredAcr);
   const response = NextResponse.redirect(url, 302);
   response.cookies.set(oidcStateCookieName(),
     await encryptLoginState({ state, nonce, verifier }, config),
