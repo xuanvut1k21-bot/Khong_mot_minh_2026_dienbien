@@ -69,5 +69,7 @@ jobs:
           END $$;
           SQL
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/activity-workflow.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/004_media_curation.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/media-curation.sql
       - name: Check activity API authorization
         run: npx --no-install vitest run --config tests/vitest.config.mts

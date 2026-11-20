@@ -8,6 +8,7 @@ import { PublishedActivities } from "@/components/PublishedActivities";
 import { ApprovedMedia } from "@/components/ApprovedMedia";
 
 export const dynamicParams = false;
+export const dynamic = "force-dynamic";
 export function generateStaticParams() {
   return sections.filter(s=>s.path!=="/admin").map(s=>({section:s.path.slice(1)}));
 }

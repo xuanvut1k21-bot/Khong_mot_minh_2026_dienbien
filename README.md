@@ -49,3 +49,7 @@ Xem [docs/ADMIN_AUTH.md](docs/ADMIN_AUTH.md). Không có tài khoản/mật kh�
 ## Quy trình duyệt hoạt động
 
 Trang `/admin/activities` chỉ phục vụ tài khoản quản trị đã được xác thực và cấp phạm vi quyền. Hoạt động nhập dưới dạng bản nháp, gửi duyệt, phê duyệt bởi người khác, công bố; kết quả chỉ hiển thị sau xác minh độc lập. Xem [docs/ACTIVITY_WORKFLOW.md](docs/ACTIVITY_WORKFLOW.md).
+
+## Kiểm duyệt Thư viện và gắn tư liệu
+
+Đã có giao diện `/admin/media` cho nguồn Google Drive được kiểm duyệt và `/admin/activities/:id/media` cho đề xuất/duyệt liên kết. Hướng dẫn tại [docs/MEDIA_LIBRARY.md](docs/MEDIA_LIBRARY.md). Chưa có upload tệp thực hoặc tự đồng bộ Drive.

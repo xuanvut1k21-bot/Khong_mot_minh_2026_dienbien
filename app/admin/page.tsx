@@ -36,9 +36,10 @@ export default async function AdminPage() {
         {grants.length === 0 ? <p>Chưa được cấp vai trò thao tác.</p> :
           <ul>{grants.map((g,i)=><li key={i}>{g.role_code} · {g.scope_type}</li>)}</ul>}
         <p><a className="button button-blue" href="/admin/activities">Quản lý hoạt động hưởng ứng →</a></p>
+        <p><a className="button button-outline" href="/admin/media">Kiểm duyệt Thư viện truyền thông →</a></p>
         <div className="notice">
           Hoạt động hưởng ứng có giao diện nhập và duyệt theo quyền được cấp.
-          Các chức năng khác vẫn chưa được kích hoạt.
+          Thư viện truyền thông đã có phần quản trị nguồn Drive có kiểm duyệt. Các chức năng còn lại chưa được kích hoạt.
         </div>
         <form method="post" action="/api/v1/admin/auth/logout">
           <button className="button button-outline" type="submit">Đăng xuất</button>

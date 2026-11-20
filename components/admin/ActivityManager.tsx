@@ -244,6 +244,7 @@ export default function ActivityManager() {
         <p><strong>{statusLabels[a.publish_status]}</strong> · {a.event_status}</p>
         {a.result_status==="verified" && <p>Kết quả xác minh: {a.sessions_count} buổi, {a.attendance_count} lượt.</p>}
         <div className="button-row">
+          <a className="button button-outline" href={"/admin/activities/"+a.id+"/media"}>Tư liệu đính kèm ↗</a>
           {a.publish_status==="draft" && a.can_edit &&
             <button className="button button-outline" disabled={busy} onClick={()=>startEdit(a)}>Sửa</button>}
           {a.publish_status==="draft" && a.can_edit &&
