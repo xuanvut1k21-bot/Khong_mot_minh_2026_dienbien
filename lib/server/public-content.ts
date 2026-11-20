@@ -55,7 +55,7 @@ export async function getPublishedActivities(
     "FROM activities a",
     "JOIN organizations o ON o.id = a.organization_id",
     "LEFT JOIN activity_results r ON r.activity_id = a.id",
-    "AND r.result_status = 'verified' AND r.verified_at IS NOT NULL AND r.verified_at <= NOW()",
+    "AND r.result_status = 'verified' AND r.verified_at IS NOT NULL AND r.verified_at <= NOW() AND a.event_status='completed'",
     "WHERE o.active = TRUE AND a.publish_status = 'published'",
     "AND a.published_at IS NOT NULL AND a.published_at <= NOW()",
     "AND ($1::text IS NULL OR a.category_code = $1::text)",
