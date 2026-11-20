@@ -41,5 +41,31 @@ jobs:
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/public-content.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/002_admin_auth.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/admin-auth.sql
+          # Exercise the upgrade with a published, verified activity created under 001/002.
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          WITH unit AS (
+            INSERT INTO organizations(public_name) VALUES ('CI legacy unit') RETURNING id
+          ), activity AS (
+            INSERT INTO activities(organization_id, slug, title, category_code, event_status, publish_status, published_at)
+            SELECT id, 'ci-legacy-upgrade', 'CI legacy activity', 'workshop', 'completed', 'published', NOW() FROM unit
+            RETURNING id
+          )
+          INSERT INTO activity_results(activity_id, result_status, attendance_count, verified_at)
+          SELECT id, 'verified', 12, NOW() FROM activity;
+          SQL
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/003_activity_review.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM activities a JOIN activity_results r ON r.activity_id = a.id
+              WHERE a.slug = 'ci-legacy-upgrade' AND a.publish_status = 'published'
+                AND a.event_status = 'completed' AND r.result_status = 'verified'
+                AND r.attendance_count = 12 AND r.verified_at IS NOT NULL
+                AND a.created_by IS NULL AND a.submitted_by IS NULL AND a.approved_by IS NULL
+                AND a.published_by IS NULL AND r.entered_by IS NULL AND r.verified_by IS NULL
+            ) THEN RAISE EXCEPTION 'Legacy activity or verified result changed during migration 003';
+            END IF;
+          END $$;
+          SQL
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/activity-workflow.sql
