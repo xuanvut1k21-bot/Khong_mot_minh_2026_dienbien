@@ -39,9 +39,13 @@ Tuyệt đối không nhập dữ liệu học sinh hoặc hồ sơ nhạy cảm
 
 ## Cơ sở dữ liệu công khai
 
-Đã có API chỉ đọc cho Hoạt động và Thư viện, chưa có API quản trị ghi dữ liệu. Hướng dẫn PostgreSQL: [docs/PUBLIC_CONTENT.md](docs/PUBLIC_CONTENT.md).
+Đã có API chỉ đọc cho Hoạt động và Thư viện, quy trình ghi và duyệt hoạt động được mô tả bên dưới. Hướng dẫn PostgreSQL: [docs/PUBLIC_CONTENT.md](docs/PUBLIC_CONTENT.md).
 
 ## Đăng nhập quản trị (đang cấu hình)
 
 Đã có mã khung Google OIDC + PKCE và phân quyền scoped RBAC, mặc định khóa. Google OIDC không được coi là bằng chứng MFA theo từng phiên; xem [docs/ADMIN_AUTH.md](docs/ADMIN_AUTH.md).
 Xem [docs/ADMIN_AUTH.md](docs/ADMIN_AUTH.md). Không có tài khoản/mật khẩu mẫu.
+
+## Quy trình duyệt hoạt động
+
+Trang `/admin/activities` chỉ phục vụ tài khoản quản trị đã được xác thực và cấp phạm vi quyền. Hoạt động nhập dưới dạng bản nháp, gửi duyệt, phê duyệt bởi người khác, công bố; kết quả chỉ hiển thị sau xác minh độc lập. Xem [docs/ACTIVITY_WORKFLOW.md](docs/ACTIVITY_WORKFLOW.md).
