@@ -25,7 +25,7 @@ export default async function AdminPage() {
       </div>}
       {configured && !admin && <div className="demo-panel">
         <h2>Đăng nhập dành cho cán bộ</h2>
-        <p>Hệ thống sử dụng nhà cung cấp danh tính OIDC có MFA.
+        <p>Hệ thống xác thực danh tính qua Google. Chủ tài khoản cần bật Xác minh 2 bước trong tài khoản Google; ứng dụng không xác nhận MFA theo từng phiên.
         Tài khoản phải được người quản trị có thẩm quyền cấp trước khi đăng nhập.</p>
         <a className="button button-blue" href="/api/v1/admin/auth/login">Đăng nhập bảo mật</a>
       </div>}
