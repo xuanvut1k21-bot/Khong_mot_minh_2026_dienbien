@@ -129,7 +129,7 @@ export async function decryptLoginState(
 
 export async function verifyOidcIdToken(
   token: string, config: OidcConfiguration, expectedNonce: string
-): Promise<{ subject: string }> {
+): Promise<{ subject: string; email: string; displayName: string | null }> {
   const keySet = createRemoteJWKSet(new URL(config.jwksUrl), {
     timeoutDuration: 5000,
     cooldownDuration: 30000
@@ -151,7 +151,9 @@ export async function verifyOidcIdToken(
   ) throw new Error("OIDC_CLAIM_VALIDATION_FAILED");
   // The stable Google subject is matched to a pre-provisioned admin_users row.
   // Email is verified as an account attribute, never used as the authorization key.
-  return { subject: payload.sub };
+  const email = payload.email.trim().toLowerCase();
+  const displayName = typeof payload.name === "string" ? payload.name.slice(0, 220) : null;
+  return { subject: payload.sub, email, displayName };
 }
 
 export async function readAdminSession(
