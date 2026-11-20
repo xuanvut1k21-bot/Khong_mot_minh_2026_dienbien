@@ -18,11 +18,11 @@ hạn theo hosted domain. Ứng dụng chỉ xin các scope `openid`, `email`, `
   ở đây như bằng chứng rằng MFA đã được thực hiện trong phiên hiện tại.
 
 ## Cấp quyền quản trị
-Không có đăng ký công khai, tự cấp quyền hoặc tài khoản mặc định. DBA/quản trị
-có thẩm quyền phải tạo trước bản ghi `admin_users` khớp chính xác
-`oidc_issuer/oidc_subject`, sau đó gán vai trò và phạm vi trong
-`admin_role_assignments`. Người dùng Google chưa được cấp trước sẽ bị từ chối.
-Không tự động cấp quyền dựa trên email.
+Không có đăng ký công khai hoặc tự cấp quyền. Cơ chế bootstrap đầu tiên chỉ hoạt động khi `BOOTSTRAP_ADMIN_EMAIL` được cấu hình riêng phía máy chủ, email trong ID Token đã xác minh (`email_verified === true`) khớp chính xác sau chuẩn hóa, chưa có bất kỳ bản ghi `admin_users` nào và `admin_bootstrap_state.completed_at` còn NULL. Google `sub` chỉ được lấy từ ID Token đã xác minh; người dùng không thể tự nhập `sub`.
+
+Việc khởi tạo được tuần tự hóa bằng PostgreSQL advisory transaction lock và thực hiện trong cùng transaction: tạo `admin_users`, gán duy nhất `technical_admin` với phạm vi `global`, ghi audit log, đánh dấu bootstrap hoàn tất và tạo phiên. Nếu bất kỳ bước nào lỗi, toàn bộ transaction rollback. Sau lần thành công, bootstrap bị khóa vĩnh viễn; thay đổi biến môi trường không mở lại được. Tài khoản Google khác hoặc tài khoản đã tồn tại nhưng bị vô hiệu hóa không được dùng để bootstrap.
+
+Sau khi bootstrap thành công, nên gỡ `BOOTSTRAP_ADMIN_EMAIL` khỏi môi trường triển khai. Người dùng khác phải được cấp trước theo quy trình quản trị có thẩm quyền.
 
 ## Cấu hình OAuth Client
 - Application type: Web application.
