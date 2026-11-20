@@ -39,17 +39,15 @@ export async function GET(request: NextRequest) {
       grant_type: "authorization_code",
       code,
       redirect_uri: config.redirectUri,
-      code_verifier: flow.verifier
+      code_verifier: flow.verifier,
+      client_id: config.clientId,
+      client_secret: config.clientSecret
     });
-    const basic = Buffer.from(
-      config.clientId + ":" + config.clientSecret
-    ).toString("base64");
     const tokens = await fetch(config.tokenUrl, {
       method: "POST",
       cache: "no-store",
       signal: AbortSignal.timeout(10000),
       headers: {
-        Authorization: "Basic " + basic,
         "Content-Type": "application/x-www-form-urlencoded"
       },
       body: params
