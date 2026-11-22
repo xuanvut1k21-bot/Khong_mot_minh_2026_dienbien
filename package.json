@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "media:scan-one": "tsx scripts/scan-one-image.ts",
-    "media:scan-preview": "tsx scripts/scan-one-document.ts"
+    "media:scan-preview": "tsx scripts/scan-one-document.ts",
+    "training:unit": "tsx --test tests/training-exam.test.ts"
   },
   "dependencies": {
     "next": "^16.0.0",
