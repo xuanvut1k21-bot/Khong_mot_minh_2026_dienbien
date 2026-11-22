@@ -13,7 +13,11 @@ export async function PublishedActivities({ featured = false }: { featured?: boo
         <p>{item.summary}</p>
         {item.startsAt && <p>Ngày tổ chức/dự kiến: {new Date(item.startsAt).toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</p>}
         {item.location && <p>Địa điểm: {item.location}</p>}
-        {item.firstMediaUrl && <p><a href={item.firstMediaUrl} target="_blank" rel="noopener noreferrer">Xem tư liệu đã duyệt ↗</a></p>}
+        {item.firstMediaUrl && <>{item.firstMediaUrl.startsWith("/api/v1/media/") &&
+            <img src={item.firstMediaUrl} alt={"Ảnh hoạt động: "+item.title} loading="lazy"
+              style={{maxWidth:"100%",maxHeight:250,objectFit:"contain",borderRadius:8}}/>}
+            <p><a href={item.firstMediaUrl} target={item.firstMediaUrl.startsWith("https://")?"_blank":undefined}
+              rel="noopener noreferrer">Xem tư liệu đã duyệt ↗</a></p></>}
         {item.verifiedResult && <p><strong>Kết quả đã xác minh:</strong> {item.verifiedResult.sessionsCount} buổi, {item.verifiedResult.attendanceCount} lượt tham gia.</p>}
       </article>)}
     </div>;

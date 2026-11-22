@@ -53,3 +53,7 @@ Trang `/admin/activities` chỉ phục vụ tài khoản quản trị đã đư�
 ## Kiểm duyệt Thư viện và gắn tư liệu
 
 Đã có giao diện `/admin/media` cho nguồn Google Drive được kiểm duyệt và `/admin/activities/:id/media` cho đề xuất/duyệt liên kết. Hướng dẫn tại [docs/MEDIA_LIBRARY.md](docs/MEDIA_LIBRARY.md). Chưa có upload tệp thực hoặc tự đồng bộ Drive.
+
+## Tải ảnh riêng tư (mặc định tắt)
+
+Đã có pipeline presigned S3 POST → vùng cách ly → ClamAV → bản WebP được tái mã hóa → cán bộ phê duyệt → API phân phối nội bộ. Không hỗ trợ PDF/video trong bước này. Xem [docs/SAFE_MEDIA_UPLOADS.md](docs/SAFE_MEDIA_UPLOADS.md).
