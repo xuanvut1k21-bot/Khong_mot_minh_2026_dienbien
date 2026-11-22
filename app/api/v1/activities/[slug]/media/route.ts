@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDatabasePool } from "@/lib/server/db";
 import { isDatabaseConfigured } from "@/lib/server/db";
-import { safeOfficialDriveUrl } from "@/lib/server/public-content";
+import { publicMediaUrl } from "@/lib/server/public-content";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -18,7 +18,8 @@ export async function GET(_request:NextRequest,context:Context) {
   try {
     const data=await getDatabasePool().query(
       [
-        "SELECT m.id,m.title,m.description,m.category_code,m.public_source_url",
+        "SELECT m.id,m.title,m.description,m.category_code,m.public_source_url,",
+        "m.source_type,m.scan_status,m.preview_ready,m.preview_object_key,m.checksum_sha256",
         "FROM activities a",
         "JOIN organizations ao ON ao.id=a.organization_id AND ao.active=TRUE",
         "JOIN activity_assets l ON l.activity_id=a.id AND l.link_status='approved'",
@@ -26,7 +27,9 @@ export async function GET(_request:NextRequest,context:Context) {
         "JOIN organizations mo ON mo.id=m.owner_organization_id AND mo.active=TRUE",
         "WHERE a.slug=$1 AND a.publish_status='published'",
         "AND a.published_at IS NOT NULL AND a.published_at<=NOW()",
-        "AND m.source_type='drive' AND m.approval_status='approved' AND m.is_public=TRUE",
+        "AND (m.source_type='drive' OR (m.source_type='upload'",
+        "AND m.scan_status='clean' AND m.preview_ready=TRUE))",
+        "AND m.approval_status='approved' AND m.is_public=TRUE",
         "AND m.approved_at IS NOT NULL AND m.approved_at<=NOW()",
         "AND m.rights_checked_at IS NOT NULL AND m.privacy_checked_at IS NOT NULL",
         "AND m.safety_checked_at IS NOT NULL",
@@ -35,7 +38,7 @@ export async function GET(_request:NextRequest,context:Context) {
     );
     return NextResponse.json({
       items:data.rows.flatMap(row=>{
-        const url=safeOfficialDriveUrl(row.public_source_url);
+        const url=publicMediaUrl(row);
         return url?[{
           id:row.id,title:row.title,description:row.description,
           category:row.category_code,url
