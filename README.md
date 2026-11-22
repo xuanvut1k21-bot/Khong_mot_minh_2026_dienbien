@@ -57,3 +57,9 @@ Trang `/admin/activities` chỉ phục vụ tài khoản quản trị đã đư�
 ## Tải ảnh riêng tư (mặc định tắt)
 
 Đã có pipeline presigned S3 POST → vùng cách ly → ClamAV → bản WebP được tái mã hóa → cán bộ phê duyệt → API phân phối nội bộ. Không hỗ trợ PDF/video trong bước này. Xem [docs/SAFE_MEDIA_UPLOADS.md](docs/SAFE_MEDIA_UPLOADS.md).
+
+## Ảnh bìa PDF/video (chưa bật)
+Đã có quy trình nhận PDF ≤25 MB, MP4 ≤80 MB vào vùng cách ly,
+tạo **ảnh bìa WebP tĩnh** qua Poppler/FFmpeg trong worker riêng.
+Chỉ ảnh bìa được kiểm duyệt có thể truy cập; PDF/video gốc không được
+phục vụ trong website. Xem [docs/PDF_VIDEO_PREVIEWS.md](docs/PDF_VIDEO_PREVIEWS.md).

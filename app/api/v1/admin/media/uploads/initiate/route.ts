@@ -9,17 +9,17 @@ import {
 } from "@/lib/server/activity-editorial";
 import { mediaPermission, mediaAudit } from "@/lib/server/media-editorial";
 import {
-  getMediaS3, getMediaStorageConfig, MAX_IMAGE_UPLOAD_BYTES
+  getMediaS3, getMediaStorageConfig, MAX_VIDEO_UPLOAD_BYTES, isAllowedUpload
 } from "@/lib/server/media-storage";
 
 export const runtime="nodejs";
 const schema=z.object({
   title:z.string().trim().min(3).max(300),
   description:z.string().trim().max(10000).default(""),
-  category:z.enum(["photo","infographic","brand","ambassador"]),
+  category:z.enum(["photo","infographic","brand","ambassador","handbook","video"]),
   organizationId:z.string().uuid(),
-  mime:z.enum(["image/jpeg","image/png","image/webp"]),
-  size:z.number().int().min(1).max(MAX_IMAGE_UPLOAD_BYTES)
+  mime:z.enum(["image/jpeg","image/png","image/webp","application/pdf","video/mp4"]),
+  size:z.number().int().min(1).max(MAX_VIDEO_UPLOAD_BYTES)
 }).strict();
 
 export async function POST(request:NextRequest) {
@@ -29,6 +29,8 @@ export async function POST(request:NextRequest) {
   if (!actor)return NextResponse.json({error:"UNAUTHORIZED"},{status:401});
   const body=await parseJsonBody(request,schema);
   if (!body)return NextResponse.json({error:"INVALID_INPUT"},{status:400});
+  if (!isAllowedUpload(body.mime,body.category,body.size))
+    return NextResponse.json({error:"UNSUPPORTED_FILE_TYPE_OR_SIZE"},{status:400});
 
   let storage, s3;
   try { storage=getMediaStorageConfig(); s3=getMediaS3(); }
@@ -78,7 +80,7 @@ export async function POST(request:NextRequest) {
       Fields:{"Content-Type":body.mime}
     });
     await mediaAudit(db,actor.id,assetId,"create",null,"pending",
-      "Tải ảnh vào vùng cách ly; chưa kiểm tra và chưa công bố");
+      "Tải tệp vào vùng cách ly; chưa kiểm tra và chưa công bố");
     await db.query("COMMIT");
     return NextResponse.json({
       assetId,sessionId,uploadUrl:signed.url,fields:signed.fields,

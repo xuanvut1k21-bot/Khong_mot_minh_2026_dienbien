@@ -17,7 +17,8 @@ export async function PublishedActivities({ featured = false }: { featured?: boo
             <img src={item.firstMediaUrl} alt={"Ảnh hoạt động: "+item.title} loading="lazy"
               style={{maxWidth:"100%",maxHeight:250,objectFit:"contain",borderRadius:8}}/>}
             <p><a href={item.firstMediaUrl} target={item.firstMediaUrl.startsWith("https://")?"_blank":undefined}
-              rel="noopener noreferrer">Xem tư liệu đã duyệt ↗</a></p></>}
+              rel="noopener noreferrer">{item.firstMediaUrl.startsWith("/api/v1/media/") ?
+                "Xem bản ảnh đã xử lý" : "Xem tư liệu Drive đã duyệt"} ↗</a></p></>}
         {item.verifiedResult && <p><strong>Kết quả đã xác minh:</strong> {item.verifiedResult.sessionsCount} buổi, {item.verifiedResult.attendanceCount} lượt tham gia.</p>}
       </article>)}
     </div>;
