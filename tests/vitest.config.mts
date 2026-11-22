@@ -8,5 +8,9 @@ export default defineConfig({
       "server-only": "next/dist/compiled/server-only/empty.js"
     }
   },
-  test: { include: ["tests/*.test.ts"] }
+  test: {
+    include: ["tests/*.test.ts"],
+    // The training exam suite runs with node:test via npm run training:unit.
+    exclude: ["tests/training-exam.test.ts"]
+  }
 });
