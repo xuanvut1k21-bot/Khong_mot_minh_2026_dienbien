@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
         "FROM media_assets m JOIN organizations o ON o.id=m.owner_organization_id)",
         "SELECT id,title,description,category_code,owner_organization_id,organization_name,",
         "public_source_url,approval_status,created_by,rights_holder,rights_basis,",
-        "source_type,scan_status,preview_ready,preview_object_key,checksum_sha256,",
+        "source_type,scan_status,preview_ready,preview_type,preview_object_key,checksum_sha256,",
         "rights_evidence_ref,rejection_reason,can_approve,can_revoke",
         "FROM accessible WHERE can_view=TRUE",
         "AND ($2::text='all' OR approval_status=$2)",
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
         category:row.category_code,organizationId:row.owner_organization_id,
         organization:row.organization_name,
         driveUrl:row.source_type==="drive"?safeOfficialDriveUrl(row.public_source_url):null,
-        sourceType:row.source_type,scanStatus:row.scan_status,
+        sourceType:row.source_type,scanStatus:row.scan_status,previewType:row.preview_type,
         previewReady:row.preview_ready,
         previewUrl:row.source_type==="upload" && row.scan_status==="clean" &&
           row.preview_ready===true ? "/api/v1/admin/media/"+row.id+"/preview" : null,

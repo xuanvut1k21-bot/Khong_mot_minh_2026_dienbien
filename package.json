@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "media:scan-one": "tsx scripts/scan-one-image.ts"
+    "media:scan-one": "tsx scripts/scan-one-image.ts",
+    "media:scan-preview": "tsx scripts/scan-one-document.ts"
   },
   "dependencies": {
     "next": "^16.0.0",

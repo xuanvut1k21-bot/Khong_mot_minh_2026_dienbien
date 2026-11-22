@@ -13,8 +13,11 @@ export async function ApprovedMedia() {
         {item.description && <p>{item.description}</p>}
         {item.url.startsWith("/api/v1/media/") && <img src={item.url} alt={item.title}
           loading="lazy" style={{maxWidth:"100%",maxHeight:270,objectFit:"contain",borderRadius:8}}/>}
+        {item.url.startsWith("/api/v1/media/") && ["handbook","video"].includes(item.category) &&
+          <p>Chỉ hiển thị ảnh bìa đã được xử lý. Nội dung PDF/video đầy đủ chưa được phát qua website.</p>}
         <p><a href={item.url} target={item.url.startsWith("https://")?"_blank":undefined}
-          rel="noopener noreferrer">Mở tài nguyên đã được duyệt ↗</a></p>
+          rel="noopener noreferrer">{item.url.startsWith("/api/v1/media/") ?
+            "Xem bản ảnh đã xử lý" : "Mở tài nguyên Drive đã duyệt"} ↗</a></p>
       </article>)}
     </div>;
   } catch {

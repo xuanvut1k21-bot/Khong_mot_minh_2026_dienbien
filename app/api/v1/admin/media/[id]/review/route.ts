@@ -18,7 +18,8 @@ const reviewSchema=z.discriminatedUnion("action",[
     rightsEvidenceRef:z.string().trim().min(3).max(500),
     rightsConfirmed:z.literal(true),
     privacyConfirmed:z.literal(true),
-    safetyConfirmed:z.literal(true)
+    safetyConfirmed:z.literal(true),
+    fullSourceReviewed:z.boolean().optional()
   }).strict(),
   z.object({action:z.literal("reject"),reason:z.string().trim().min(8).max(1000)}).strict(),
   z.object({action:z.literal("revoke"),reason:z.string().trim().min(8).max(1000)}).strict()
@@ -42,7 +43,7 @@ export async function POST(request:NextRequest,context:Context) {
       [
         "SELECT id,owner_organization_id,created_by,source_type,",
         "public_source_url,approval_status,scan_status,preview_ready,",
-        "preview_object_key,checksum_sha256,original_mime_type",
+        "preview_object_key,checksum_sha256,original_mime_type,preview_type",
         "FROM media_assets WHERE id=$1 FOR UPDATE"
       ].join(" "),[id]
     );
@@ -70,11 +71,21 @@ export async function POST(request:NextRequest,context:Context) {
       } else if (asset.source_type==="upload"){
         if (
           asset.scan_status!=="clean" || asset.preview_ready!==true ||
-          !["image/jpeg","image/png","image/webp"].includes(asset.original_mime_type) ||
+          !(
+            (asset.preview_type==="image" &&
+              ["image/jpeg","image/png","image/webp"].includes(asset.original_mime_type)) ||
+            (asset.preview_type==="pdf_cover" && asset.original_mime_type==="application/pdf") ||
+            (asset.preview_type==="video_poster" && asset.original_mime_type==="video/mp4")
+          ) ||
           !checkedPreviewKey(id,asset.checksum_sha256,asset.preview_object_key)
         ) throw new EditorialError(409,"IMAGE_NOT_SCANNED");
       } else {
         throw new EditorialError(409,"UNSUPPORTED_MEDIA_SOURCE");
+      }
+      if(asset.source_type==="upload" &&
+        ["pdf_cover","video_poster"].includes(asset.preview_type) &&
+        input.fullSourceReviewed!==true) {
+        throw new EditorialError(409,"FULL_SOURCE_REVIEW_REQUIRED");
       }
       await db.query(
         [
@@ -88,7 +99,9 @@ export async function POST(request:NextRequest,context:Context) {
         ]
       );
       await mediaAudit(db,actor.id,id,"approve",before,"approved",
-        "Nguồn đã được kiểm tra: quyền sử dụng, riêng tư và tính phù hợp nội dung");
+        asset.preview_type==="pdf_cover" || asset.preview_type==="video_poster"
+          ? "Cán bộ xác nhận đã kiểm tra đầy đủ nội dung gốc bằng môi trường độc lập"
+          : "Nguồn đã được kiểm tra: quyền sử dụng, riêng tư và tính phù hợp nội dung");
     } else if (input.action==="reject") {
       if (before!=="pending" || asset.created_by===actor.id)
         throw new EditorialError(409,"SEPARATION_OR_STATUS_INVALID");
