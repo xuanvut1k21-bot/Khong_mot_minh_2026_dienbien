@@ -63,3 +63,10 @@ Trang `/admin/activities` chỉ phục vụ tài khoản quản trị đã đư�
 tạo **ảnh bìa WebP tĩnh** qua Poppler/FFmpeg trong worker riêng.
 Chỉ ảnh bìa được kiểm duyệt có thể truy cập; PDF/video gốc không được
 phục vụ trong website. Xem [docs/PDF_VIDEO_PREVIEWS.md](docs/PDF_VIDEO_PREVIEWS.md).
+
+## Đào tạo giảng viên nguồn (mặc định khóa)
+Bổ sung 9 vị trí phiên học chưa công bố, API đăng ký tối thiểu họ tên/trường,
+xác nhận hai khảo sát bằng webhook có chữ ký và bài thi 20 câu/15 phút
+từ đúng 90 câu đã duyệt, chấm điểm tại máy chủ, đạt từ 16 câu.
+Không có học liệu, câu hỏi hoặc người học giả trong production.
+Xem [docs/TRAINING_FOUNDATION.md](docs/TRAINING_FOUNDATION.md).

@@ -32,6 +32,7 @@ jobs:
           node-version: "22"
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
+      - run: npm run training:unit
       - run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
@@ -75,5 +76,7 @@ jobs:
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/safe-image-upload.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/006_pdf_video_previews.sql
           psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/pdf-video-previews.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f migrations/007_training_foundation.sql
+          psql "$TEST_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/training-foundation.sql
       - name: Check activity API authorization
         run: npx --no-install vitest run --config tests/vitest.config.mts

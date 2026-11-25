@@ -6,6 +6,7 @@ import { AvatarFrame } from "@/components/AvatarFrame";
 import { QuizPractice } from "@/components/QuizPractice";
 import { PublishedActivities } from "@/components/PublishedActivities";
 import { ApprovedMedia } from "@/components/ApprovedMedia";
+import { TrainingPortal } from "@/components/TrainingPortal";
 
 export const dynamicParams = false;
 export const dynamic = "force-dynamic";
@@ -48,12 +49,7 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
         <PublishedActivities />
         <div className="notice">Chỉ hiển thị hoạt động đã công bố. Số liệu kết quả phải được xác minh trước khi hiển thị.</div>
       </>}
-      {section==="dao-tao" && <>
-        <h2>Chương trình đào tạo giảng viên nguồn</h2>
-        <div className="content-grid"><div className="info-card"><h3>9 phiên học</h3><ol>{Array.from({length:9},(_,i)=><li key={i}>Phiên học {i+1} – chờ tích hợp học liệu đã duyệt</li>)}</ol></div>
-        <div className="info-card"><h3>Hai khảo sát bắt buộc</h3><p>Khảo sát sau phiên 1 và phiên 9 phải được xác minh hoàn thành, không chỉ ghi nhận người dùng bấm liên kết.</p><h3>Bài kiểm tra cuối khóa</h3><p>20 câu ngẫu nhiên từ 90 câu đã được duyệt · 15 phút · đạt tối thiểu 16/20 · không giới hạn số lần làm.</p><button className="button button-blue" disabled>Chưa mở bài kiểm tra</button></div></div>
-        <div className="notice notice-warning">Chưa có ngân hàng 90 câu đã thẩm định và xác minh hai khảo sát, vì vậy chưa cho phép tham gia thi chính thức. Không cấp chứng chỉ hoặc xếp hạng.</div>
-      </>}
+      {section==="dao-tao" && <TrainingPortal />}
       {section==="thu-vien" && <>
         <h2>Kho tài liệu truyền thông</h2>
         <div className="content-grid">{["Bộ nhận diện","Infographic và poster","Video truyền thông","Ảnh hoạt động","Cẩm nang và học liệu","Đại sứ chiến dịch"].map(t=><div className="info-card" key={t}><h3>{t}</h3><p>Tài nguyên sẽ được cán bộ lựa chọn, kiểm tra quyền sử dụng và phê duyệt trước khi phát hành.</p></div>)}</div>
