@@ -148,7 +148,13 @@ async function integration(){
   assert.equal(initial.rows[0].lessons,9,"Expected 9 lesson slots");
 
   await startServer();
-  let response=await get("/api/v1/training/overview");
+  let response=await get("/api/health/live");
+  expectStatus(response,200,"Liveness endpoint");
+  assert.equal((await response.json()).status,"alive");
+  response=await get("/api/health/ready");
+  expectStatus(response,200,"Database readiness endpoint");
+  assert.equal((await response.json()).status,"ready");
+  response=await get("/api/v1/training/overview");
   expectStatus(response,200,"Initial overview");
   let snapshot=await response.json();
   assert.equal(snapshot.examOpen,false);
@@ -168,6 +174,12 @@ async function integration(){
   });
   expectStatus(response,201,"Registration");
   const firstCookie=await getCookie(response);
+  const learnerLookup=await db.query(
+    "SELECT id FROM training_learners WHERE full_name=$1 AND school_name=$2",
+    ["Synthetic Learner","Synthetic School CI"]
+  );
+  assert.equal(learnerLookup.rowCount,1);
+  const firstLearnerId:string=learnerLookup.rows[0].id;
 
   response=await get("/api/v1/training/me",firstCookie);
   expectStatus(response,200,"Learner me");
@@ -231,6 +243,19 @@ async function integration(){
   assert.deepEqual([...snapshot.surveysVerified].sort((a:number,b:number)=>a-b),[1,9]);
   assert.equal(snapshot.examOpen,true);
 
+  await db.query([
+    "INSERT INTO training_learner_rate_limits(learner_id,action,used,window_started_at)",
+    "VALUES($1,'exam_start',12,NOW())",
+    "ON CONFLICT(learner_id,action) DO UPDATE SET",
+    "used=EXCLUDED.used,window_started_at=NOW()"
+  ].join(" "),[firstLearnerId]);
+  response=await post("/api/v1/training/attempts",{},firstCookie);
+  expectStatus(response,429,"Exam start budget enforced");
+  assert.equal(response.headers.get("retry-after"),"60");
+  await db.query(
+    "DELETE FROM training_learner_rate_limits WHERE learner_id=$1 AND action='exam_start'",
+    [firstLearnerId]
+  );
   response=await post("/api/v1/training/attempts",{},firstCookie);
   expectStatus(response,201,"Start first attempt");
   let exam=await response.json();
@@ -245,6 +270,18 @@ async function integration(){
   const resumed=await response.json();
   assert.equal(resumed.questions.length,20);
 
+  await db.query(
+    "UPDATE training_registration_limits SET used=300,window_started_at=NOW() WHERE bucket_key='global'"
+  );
+  response=await post("/api/v1/training/register",{
+    fullName:"Synthetic Other Learner",schoolName:"Synthetic School CI",
+    privacyAcknowledged:true
+  });
+  expectStatus(response,429,"Global registration safety budget");
+  assert.equal(response.headers.get("retry-after"),"600");
+  await db.query(
+    "UPDATE training_registration_limits SET used=1,window_started_at=NOW() WHERE bucket_key='global'"
+  );
   response=await post("/api/v1/training/register",{
     fullName:"Synthetic Other Learner",schoolName:"Synthetic School CI",
     privacyAcknowledged:true
@@ -264,6 +301,18 @@ async function integration(){
   const first15=items.rows.slice(0,15).map(r=>({
     position:Number(r.position),choiceIndex:Number(r.correct_index)
   }));
+  await db.query([
+    "INSERT INTO training_learner_rate_limits(learner_id,action,used,window_started_at)",
+    "VALUES($1,'exam_submit',30,NOW())",
+    "ON CONFLICT(learner_id,action) DO UPDATE SET",
+    "used=EXCLUDED.used,window_started_at=NOW()"
+  ].join(" "),[firstLearnerId]);
+  response=await post("/api/v1/training/attempts/"+attemptId,{answers:first15},firstCookie);
+  expectStatus(response,429,"Exam submit budget enforced");
+  await db.query(
+    "DELETE FROM training_learner_rate_limits WHERE learner_id=$1 AND action='exam_submit'",
+    [firstLearnerId]
+  );
   response=await post("/api/v1/training/attempts/"+attemptId,{
     answers:[first15[0],first15[0]]
   },firstCookie);
@@ -300,6 +349,19 @@ async function integration(){
   assert.equal(outcome.message,
     "Congratulations! Chúc mừng bạn đã hoàn thành chương trình đào tạo giảng viên Không Một Mình 2026");
   assert.ok(!JSON.stringify(outcome).includes("correctCount"));
+  response=await post("/api/v1/training/attempts",{},firstCookie);
+  expectStatus(response,201,"New attempt can begin after a pass");
+  const expiredAttempt=(await response.json()).attemptId;
+  await db.query([
+    "UPDATE training_attempts SET started_at=NOW()-INTERVAL '17 minutes',",
+    "expires_at=NOW()-INTERVAL '2 minutes' WHERE id=$1"
+  ].join(" "),[expiredAttempt]);
+  response=await post("/api/v1/training/attempts/"+expiredAttempt,{
+    answers:[]
+  },firstCookie);
+  expectStatus(response,410,"Late submission cannot be graded");
+  response=await post("/api/v1/training/attempts",{},firstCookie);
+  expectStatus(response,201,"Exam retries are not capped");
 
   response=await remove("/api/v1/training/me",firstCookie);
   expectStatus(response,200,"Own account deletion");

@@ -10,7 +10,11 @@
     "media:scan-one": "tsx scripts/scan-one-image.ts",
     "media:scan-preview": "tsx scripts/scan-one-document.ts",
     "training:unit": "tsx --test tests/training-exam.test.ts tests/training-survey-signature.test.ts",
-    "training:journey": "tsx tests/training-journey.integration.ts"
+    "training:journey": "tsx tests/training-journey.integration.ts",
+    "training:maintenance": "tsx scripts/training-maintenance.ts",
+    "training:maintenance-test": "tsx tests/training-maintenance.integration.ts",
+    "staging:test": "tsx --test tests/staging-readiness.test.ts",
+    "staging:check": "tsx scripts/staging-check.ts"
   },
   "dependencies": {
     "next": "^16.0.0",
