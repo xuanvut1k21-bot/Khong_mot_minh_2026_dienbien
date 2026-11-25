@@ -1,0 +1,47 @@
+name: Staging preflight (manual, no deploy)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type CHECK_STAGING for read-only readiness
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  preflight:
+    if: ${{ inputs.confirm == 'CHECK_STAGING' }}
+    runs-on: ubuntu-24.04
+    environment: staging
+    timeout-minutes: 15
+    env:
+      STAGING_DEPLOYMENT_TARGET: staging
+      NODE_ENV: production
+      APP_BASE_URL: ${{ vars.STAGING_APP_BASE_URL }}
+      DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+      OIDC_ISSUER: ${{ vars.STAGING_OIDC_ISSUER }}
+      OIDC_CLIENT_ID: ${{ vars.STAGING_OIDC_CLIENT_ID }}
+      OIDC_CLIENT_SECRET: ${{ secrets.STAGING_OIDC_CLIENT_SECRET }}
+      OIDC_AUTHORIZATION_ENDPOINT: ${{ vars.STAGING_OIDC_AUTHORIZATION_ENDPOINT }}
+      OIDC_TOKEN_ENDPOINT: ${{ vars.STAGING_OIDC_TOKEN_ENDPOINT }}
+      OIDC_JWKS_URI: ${{ vars.STAGING_OIDC_JWKS_URI }}
+      OIDC_REQUIRED_ACR: ${{ vars.STAGING_OIDC_REQUIRED_ACR }}
+      ADMIN_STATE_KEY_BASE64: ${{ secrets.STAGING_ADMIN_STATE_KEY_BASE64 }}
+      MEDIA_IMAGE_UPLOADS_ENABLED: "false"
+      MEDIA_PDF_PREVIEW_ENABLED: "false"
+      MEDIA_VIDEO_POSTER_ENABLED: "false"
+      TRAINING_REGISTRATION_ENABLED: "false"
+      TRAINING_EXAM_ENABLED: "false"
+      TRAINING_SURVEY_WEBHOOK_ENABLED: "false"
+      TRAINING_SURVEY_LAUNCH_ENABLED: "false"
+      TRAINING_RETENTION_PURGE_ENABLED: "false"
+      TRAINING_EDGE_RATE_LIMIT_READY: "false"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Install dependencies for preflight CLI
+        run: npm install --include=dev --no-audit --no-fund
+      - name: Validate staging config and PostgreSQL schema (read-only)
+        run: npm run staging:check -- --check-db

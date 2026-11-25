@@ -92,3 +92,26 @@ tạo **người học/câu hỏi giả** và mô phỏng server-to-server callb
 có chữ ký. Kiểm tra đăng ký, QR, 2 khảo sát, điều kiện mở thi,
 đề 20 câu, mức đạt 16/20, làm lại và quyền xóa dữ liệu.
 Không sử dụng URL khảo sát hoặc HMAC secret thử nghiệm khi vận hành thật.
+
+## An toàn vận hành Đào tạo
+Tăng cường giới hạn đăng ký chung ở PostgreSQL (300/10 phút), mở đề
+(12 yêu cầu/phút/học viên), nộp bài (30 yêu cầu/phút/học viên);
+không giới hạn tổng số lượt thi qua các phiên. Production chỉ mở khi
+đã xác nhận chống bot ở reverse proxy/edge. Có công cụ dọn dữ liệu
+tạm hết hạn và chính sách xóa học viên không còn hoạt động,
+**không tự chạy và mặc định dry-run**. Xem
+[docs/TRAINING_OPERATIONS.md](docs/TRAINING_OPERATIONS.md).
+
+## Chuẩn bị staging (không tự triển khai)
+Chạy `npm run staging:test` để kiểm thử quy tắc cấu hình. `npm run staging:check` chỉ báo cáo điều kiện và `npm run staging:check -- --check-db` kiểm tra PostgreSQL read-only. Xem `docs/STAGING_DEPLOYMENT.md`. Chức năng học viên vẫn tắt.
+
+## Gói container staging chưa triển khai
+
+Bổ sung Dockerfile, compose.staging.yml, .dockerignore và Next.js
+standalone output. Image chạy không có quyền root, không chứa .env
+hoặc secrets, không dùng PostgreSQL cài sẵn. Compose buộc
+có file .env.staging chỉ trên máy quản trị (được .gitignore bỏ qua),
+bind cổng về 127.0.0.1:3000, khóa các chức năng nhạy cảm và dùng
+giới hạn tài nguyên. Chỉ chạy sau khi đã có HTTPS proxy và PostgreSQL
+staging riêng. CI tự build, chạy thử và xóa container thử;
+không đẩy lên registry hay đưa lên máy chủ. Xem tài liệu staging.

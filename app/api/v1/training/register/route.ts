@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getDatabasePool } from "@/lib/server/db";
 import { parseJsonBody } from "@/lib/server/activity-editorial";
+import { consumeRegistrationBudget,trainingTooManyRequests } from "@/lib/server/training-budgets";
 import {
   trainingRegistrationEnabled, trainingOriginValid,
   getTrainingLearner, trainingCookieName, trainingSecureCookies,
@@ -25,7 +26,12 @@ export async function POST(request:NextRequest){
     return NextResponse.json({error:"ALREADY_REGISTERED"},{status:409});
   const body=await parseJsonBody(request,schema);
   if(!body)return NextResponse.json({error:"INVALID_INPUT"},{status:400});
-
+  try{
+    if(!await consumeRegistrationBudget())return trainingTooManyRequests(600);
+  }catch{
+    return NextResponse.json({error:"REGISTRATION_UNAVAILABLE"},{status:503,
+      headers:{"Cache-Control":"no-store"}});
+  }
   const token=randomTrainingToken();
   const db=await getDatabasePool().connect();
   try{
