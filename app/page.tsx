@@ -5,7 +5,7 @@ import { PublishedActivities } from "@/components/PublishedActivities";
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="home-page">
       <section className="hero">
         <div className="container hero-inner">
           <span className="eyebrow">CHIẾN DỊCH TẠI TỈNH ĐIỆN BIÊN · 2026</span>
