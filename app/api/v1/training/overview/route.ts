@@ -3,6 +3,7 @@ import { getDatabasePool, isDatabaseConfigured } from "@/lib/server/db";
 import { safeOfficialDriveUrl } from "@/lib/server/public-content";
 import { getTrainingLearner, trainingExamEnabled, trainingRegistrationEnabled } from "@/lib/server/training-security";
 import { APPROVED_BANK_SIZE } from "@/lib/training-exam";
+import { publicSurveyLanding } from "@/lib/server/training-surveys";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -17,7 +18,7 @@ export async function GET(request:NextRequest){
   if(!isDatabaseConfigured())return NextResponse.json({
     lessons:empty,registrationOpen:false,examOpen:false,
     privacyNoticeUrl:url,bankReady:false,surveysVerified:[],
-    learnerReference:null
+    registered:false,surveyLaunchAvailable:{"1":false,"9":false}
   },{headers:{"Cache-Control":"no-store"}});
   try{
     const [rows,bank,learner]=await Promise.all([
@@ -40,20 +41,25 @@ export async function GET(request:NextRequest){
     });
     let surveys:number[]=[];
     if(learner){
-      const result=await getDatabasePool().query(
-        "SELECT lesson_number FROM training_verified_surveys WHERE learner_id=$1",
-        [learner.id]
-      );
+      const result=await getDatabasePool().query([
+        "SELECT v.lesson_number FROM training_verified_surveys v",
+        "JOIN training_survey_handoffs h ON h.id=v.handoff_id",
+        "WHERE v.learner_id=$1 AND h.consumed_at IS NOT NULL"
+      ].join(" "),[learner.id]);
       surveys=result.rows.map(x=>Number(x.lesson_number));
     }
     const bankReady=bank.rows[0]?.count===APPROVED_BANK_SIZE;
     const materialReady=lessons.every(x=>x.published);
     const eligible=surveys.includes(1)&&surveys.includes(9);
+    const surveyLaunchAvailable={
+      "1":lessons[0].published && Boolean(publicSurveyLanding(1)),
+      "9":lessons[8].published && Boolean(publicSurveyLanding(9))
+    };
     return NextResponse.json({
       lessons,registrationOpen:trainingRegistrationEnabled(),
       examOpen:trainingExamEnabled()&&bankReady&&materialReady&&eligible,
       bankReady,privacyNoticeUrl:url,surveysVerified:surveys,
-      learnerReference:learner?.id??null
+      registered:Boolean(learner),surveyLaunchAvailable
     },{headers:{"Cache-Control":"no-store"}});
   }catch{return NextResponse.json({error:"TRAINING_UNAVAILABLE"},{status:503});}
 }
