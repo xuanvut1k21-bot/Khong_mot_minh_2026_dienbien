@@ -83,3 +83,12 @@ Không nhập sẵn dữ liệu thật hoặc câu hỏi giả. Xem
 dùng một lần khi mở biểu mẫu và xác nhận qua webhook HMAC từ provider
 được ủy quyền. Mặc định khóa đến khi xác minh provider thật.
 Chi tiết [docs/TRAINING_SURVEY_QR.md](docs/TRAINING_SURVEY_QR.md).
+
+## Kiểm thử hành trình Đào tạo (không có dữ liệu học viên thật)
+
+Sau migration 001–009 trong một PostgreSQL dùng riêng cho CI,
+`npm run training:journey` chạy Next.js ở chế độ phát triển,
+tạo **người học/câu hỏi giả** và mô phỏng server-to-server callback khảo sát
+có chữ ký. Kiểm tra đăng ký, QR, 2 khảo sát, điều kiện mở thi,
+đề 20 câu, mức đạt 16/20, làm lại và quyền xóa dữ liệu.
+Không sử dụng URL khảo sát hoặc HMAC secret thử nghiệm khi vận hành thật.
