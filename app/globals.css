@@ -84,3 +84,31 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .home-page .section-kicker {
   font-size: 0.8125rem;
 }
+
+.campaign-brand-mark {
+  width: clamp(76px, 10vw, 124px);
+  aspect-ratio: 2.75;
+  flex: none;
+  border-radius: 8px;
+  background: var(--blue) url("./campaign-assets/campaign-logo.svg") center / 85% auto no-repeat;
+}
+.home-page .hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.35fr);
+  align-items: center;
+  gap: clamp(18px, 3vw, 46px);
+}
+.home-page .hero-inner::after { content: none; }
+.campaign-art { position: relative; }
+.campaign-art img { display: block; width: 100%; height: auto; }
+.campaign-art .campaign-slogan { position: absolute; top: 0; left: 0; width: 54.8%; }
+.campaign-students {
+  display: block;
+  width: min(100%, 250px);
+  height: auto;
+  margin: 0 auto 16px;
+}
+@media (max-width: 760px) {
+  .home-page .hero-inner { grid-template-columns: 1fr; }
+  .campaign-art { width: min(100%, 550px); justify-self: center; }
+}

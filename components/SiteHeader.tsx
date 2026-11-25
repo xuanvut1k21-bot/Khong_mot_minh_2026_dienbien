@@ -6,7 +6,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="container header-main">
         <Link className="brand" href="/" aria-label="Trang chủ Không Một Mình 2026">
-          <span className="brand-mark" aria-hidden="true">01M</span>
+          <span className="campaign-brand-mark" aria-hidden="true" />
           <span><strong>KHÔNG MỘT MÌNH 2026</strong><small>KẾT NỐI KHÔNG TỔN THƯƠNG · ĐIỆN BIÊN</small></span>
         </Link>
         <a className="header-hotline" href="tel:111">Tổng đài bảo vệ trẻ em <strong>111</strong></a>
