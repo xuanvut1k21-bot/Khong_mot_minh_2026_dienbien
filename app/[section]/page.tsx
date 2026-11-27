@@ -1,4 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
+import students from "../campaign-assets/students.webp";
+import slogan from "../campaign-assets/slogan.webp";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { sections, official, risks } from "@/lib/site";
@@ -27,8 +30,14 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
   const {section}=await params;
   const info=sections.find(s=>s.path==="/"+section);
   if(!info)notFound();
+  const artwork = section === "lan-toa" ? students : section === "thu-vien" ? slogan : null;
   return <main>
-    <section className="page-hero"><div className="container"><span className="eyebrow">KHÔNG MỘT MÌNH 2026 · ĐIỆN BIÊN</span><h1>{info.title}</h1><p>{info.description}</p></div></section>
+    <section className="page-hero">
+      <div className={artwork ? "container section-art-header" : "container"}>
+        <div><span className="eyebrow">KHÔNG MỘT MÌNH 2026 · ĐIỆN BIÊN</span><h1>{info.title}</h1><p>{info.description}</p></div>
+        {artwork && <Image className="section-art-image" src={artwork} alt={section === "lan-toa" ? "Ba bạn trẻ cùng chụp ảnh bằng điện thoại" : "Kết nối không tổn thương – Phòng chống xâm hại trực tuyến"} unoptimized />}
+      </div>
+    </section>
     <div className="container content-section content-width">
       {section==="lan-toa" && <>
         <div className="content-grid">
@@ -54,6 +63,7 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
         <h2>Kho tài liệu truyền thông</h2>
         <div className="content-grid">{["Bộ nhận diện","Infographic và poster","Video truyền thông","Ảnh hoạt động","Cẩm nang và học liệu","Đại sứ chiến dịch"].map(t=><div className="info-card" key={t}><h3>{t}</h3><p>Tài nguyên sẽ được cán bộ lựa chọn, kiểm tra quyền sử dụng và phê duyệt trước khi phát hành.</p></div>)}</div>
         <ApprovedMedia />
+        <p><External href="https://khongmotminh.vn/#tai-lieu">Tài liệu trên website chính thức của chiến dịch</External></p>
         <p><External href={official.mediaFolder}>Kho tư liệu nguồn của chiến dịch</External></p>
         <div className="notice">Liên kết kho nguồn có thể yêu cầu quyền Drive. Website không tự động sao chép hoặc đồng bộ tất cả tệp từ Drive.</div>
       </>}
