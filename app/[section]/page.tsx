@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import danceTutorial from "../campaign-assets/dance-tutorial.webp";
+import danceSample from "../campaign-assets/dance-sample.webp";
 import mediaCover from "../campaign-assets/handbook-media.webp";
 import educationCover from "../campaign-assets/handbook-education.webp";
 import students from "../campaign-assets/students.webp";
@@ -44,7 +46,18 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
       {section==="lan-toa" && <>
         <div className="content-grid">
           <div className="info-card"><h2>Dance Challenge – Lướt Chạm</h2><p>Xem các video chính thức. Video do đơn vị gửi sẽ do quản trị viên kiểm duyệt trước khi công bố; website không nhận video tải lên từ công chúng.</p>
-            <ul className="resource-list"><li><External href={official.danceTutorial}>Video hướng dẫn</External></li><li><External href={official.danceSample}>Video mẫu</External></li><li><External href={official.themeSong}>Bài hát chủ đề</External></li></ul>
+            <div className="dance-videos">
+              {[
+                {title: "Video hướng dẫn", image: danceTutorial, href: official.danceTutorial},
+                {title: "Video mẫu", image: danceSample, href: official.danceSample}
+              ].map(({title, image, href}) => (
+                <a key={href} href={href} target="_blank" rel="noopener noreferrer">
+                  <Image src={image} alt="" unoptimized />
+                  <span>{title} ↗</span>
+                </a>
+              ))}
+            </div>
+            <External href={official.themeSong}>Bài hát chủ đề</External>
           </div>
           <div className="info-card"><h2>Thư viện video đã duyệt</h2><div className="empty-state">Chưa có dữ liệu video do các đơn vị gửi đã được duyệt trong bản nền tảng.</div></div>
         </div>

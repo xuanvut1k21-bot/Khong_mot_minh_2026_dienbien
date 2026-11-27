@@ -140,3 +140,21 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
 .handbook-details { padding: clamp(12px, 2vw, 24px); }
 .handbook-details h2 { line-height: 1.25; margin: 0 0 10px; }
 .handbook-details span { font-size: 1rem; }
+
+.dance-videos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0;
+}
+.dance-videos a { display: block; font-weight: 700; }
+.dance-videos img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+  background: #171b31;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
