@@ -124,3 +124,19 @@ a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
   .section-art-header { grid-template-columns: minmax(0, 1fr); }
   .section-art-image { width: min(82%, 300px); max-height: 155px; justify-self: center; }
 }
+
+.handbook-card {
+  display: grid;
+  grid-template-columns: minmax(105px, 38%) 1fr;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+}
+.handbook-card:hover { border-color: var(--blue); }
+.handbook-cover { padding: 16px; background: #eeedff; }
+.handbook-cover img { display: block; width: 100%; height: auto; aspect-ratio: 500 / 706; object-fit: contain; }
+.handbook-details { padding: clamp(12px, 2vw, 24px); }
+.handbook-details h2 { line-height: 1.25; margin: 0 0 10px; }
+.handbook-details span { font-size: 1rem; }

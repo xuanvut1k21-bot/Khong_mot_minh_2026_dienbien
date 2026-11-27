@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import mediaCover from "../campaign-assets/handbook-media.webp";
+import educationCover from "../campaign-assets/handbook-education.webp";
 import students from "../campaign-assets/students.webp";
 import slogan from "../campaign-assets/slogan.webp";
 import { notFound } from "next/navigation";
@@ -48,11 +50,22 @@ export default async function SectionPage({params}:{params:Promise<{section:stri
         </div>
         <AvatarFrame />
       </>}
-      {section==="cam-nang" && <>
-        <div className="content-grid"><div className="info-card"><h2>Cẩm nang truyền thông</h2><p>Tài liệu chính thức gồm 5 phần.</p><External href={official.mediaHandbook}>Đọc bản PDF gốc</External><ol>{Array.from({length:5},(_,i)=><li key={i}>Phần {i+1} – Nội dung theo tài liệu gốc</li>)}</ol></div>
-        <div className="info-card"><h2>Cẩm nang giáo dục</h2><p>Tài liệu chính thức gồm 6 phần.</p><External href={official.educationHandbook}>Đọc bản PDF gốc</External><ol>{Array.from({length:6},(_,i)=><li key={i}>Phần {i+1} – Nội dung theo tài liệu gốc</li>)}</ol></div></div>
-        <div className="notice">Chế độ HTML đọc theo chương và tìm kiếm toàn văn chưa mở vì cần đối chiếu toàn bộ nội dung với PDF gốc, tránh công bố sai tài liệu.</div>
-      </>}
+      {section==="cam-nang" && (
+        <div className="content-grid handbook-grid">
+          {[
+            {title: "Cẩm nang truyền thông", cover: mediaCover, href: official.mediaHandbook},
+            {title: "Cẩm nang giáo dục", cover: educationCover, href: official.educationHandbook}
+          ].map(({title, cover, href}) => (
+            <a className="handbook-card" href={href} target="_blank" rel="noopener noreferrer" key={href}>
+              <div className="handbook-cover"><Image src={cover} alt="" unoptimized /></div>
+              <div className="handbook-details">
+                <h2>{title}</h2>
+                <span>Đọc bản PDF trên Google Drive ↗</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
       {section==="hoat-dong" && <>
         <h2>Hoạt động hưởng ứng tại Điện Biên</h2>
         <PublishedActivities />
